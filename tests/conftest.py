@@ -1,3 +1,4 @@
+import numpy as np
 """
 InsightBoost - Pytest Configuration and Fixtures
 Shared fixtures for unit and integration tests
@@ -22,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from insightboost.config.settings import Settings
 from insightboost.models.dataset import ColumnInfo, Dataset, DatasetMetadata
 from insightboost.models.insight import Insight, InsightType
-from insightboost.models.visualization import ChartType, Visualization, VisualizationConfig
+from insightboost.models.visualization import ChartType, GeneratedVisualization, VisualizationConfig
 
 
 # ============================================
@@ -60,9 +61,9 @@ def sample_sales_data() -> pd.DataFrame:
         "date": pd.date_range("2024-01-01", periods=100, freq="D"),
         "product": ["Widget A", "Widget B", "Gadget X", "Gadget Y"] * 25,
         "region": ["North", "South", "East", "West"] * 25,
-        "units_sold": [int(x) for x in (50 + 30 * pd.np.random.randn(100)).clip(1, 200)],
-        "revenue": [float(x) for x in (1000 + 500 * pd.np.random.randn(100)).clip(100, 5000)],
-        "cost": [float(x) for x in (500 + 200 * pd.np.random.randn(100)).clip(50, 2000)],
+        "units_sold": [int(x) for x in (50 + 30 * np.random.randn(100)).clip(1, 200)],
+        "revenue": [float(x) for x in (1000 + 500 * np.random.randn(100)).clip(100, 5000)],
+        "cost": [float(x) for x in (500 + 200 * np.random.randn(100)).clip(50, 2000)],
     })
 
 
@@ -97,9 +98,9 @@ def sample_timeseries_data() -> pd.DataFrame:
     dates = pd.date_range("2023-01-01", periods=365, freq="D")
     return pd.DataFrame({
         "timestamp": dates,
-        "temperature": [20 + 10 * pd.np.sin(i / 30) + pd.np.random.randn() for i in range(365)],
-        "humidity": [60 + 20 * pd.np.cos(i / 30) + pd.np.random.randn() * 5 for i in range(365)],
-        "pressure": [1013 + pd.np.random.randn() * 10 for _ in range(365)],
+        "temperature": [20 + 10 * np.sin(i / 30) + np.random.randn() for i in range(365)],
+        "humidity": [60 + 20 * np.cos(i / 30) + np.random.randn() * 5 for i in range(365)],
+        "pressure": [1013 + np.random.randn() * 10 for _ in range(365)],
         "sensor_id": ["S001", "S002", "S003"] * 121 + ["S001", "S002"],
     })
 
@@ -219,9 +220,9 @@ def sample_insight() -> Insight:
 
 
 @pytest.fixture
-def sample_visualization() -> Visualization:
+def sample_visualization() -> GeneratedVisualization:
     """Sample visualization model for testing."""
-    return Visualization(
+    return GeneratedVisualization(
         id=uuid4(),
         dataset_id=uuid4(),
         chart_type=ChartType.LINE,
