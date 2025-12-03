@@ -14,11 +14,8 @@ import plotly.graph_objects as go
 from insightboost.api.anthropic_client import AnthropicClient
 from insightboost.config.logging_config import get_logger
 from insightboost.core.data_analyzer import DataAnalyzer
-from insightboost.models.visualization import (
-    ChartType,
-    VisualizationConfig,
-    VisualizationSuggestion,
-)
+from insightboost.models.visualization import (ChartType, VisualizationConfig,
+                                               VisualizationSuggestion)
 from insightboost.utils.exceptions import VisualizationError
 from insightboost.utils.validators import validate_dataframe
 

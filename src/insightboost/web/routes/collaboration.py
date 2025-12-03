@@ -11,9 +11,7 @@ from typing import Any
 from flask import Blueprint, jsonify, request
 
 from insightboost.config.logging_config import get_logger
-from insightboost.models.user import (
-    SessionStatus,
-)
+from insightboost.models.user import SessionStatus
 
 logger = get_logger("routes.collaboration")
 collaboration_bp = Blueprint("collaboration", __name__)

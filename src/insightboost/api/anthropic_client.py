@@ -11,36 +11,21 @@ from uuid import uuid4
 
 import anthropic
 import pandas as pd
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from tenacity import (retry, retry_if_exception_type, stop_after_attempt,
+                      wait_exponential)
 
 from insightboost.api.rate_limiter import RateLimiter
 from insightboost.config.logging_config import get_logger
 from insightboost.config.settings import Settings, get_settings
-from insightboost.models.insight import (
-    DatasetAnalysis,
-    DatasetSummary,
-    Insight,
-    InsightType,
-    Pattern,
-    PatternType,
-    QualityMetrics,
-)
-from insightboost.models.visualization import (
-    ChartType,
-    VisualizationConfig,
-    VisualizationSuggestion,
-)
+from insightboost.models.insight import (DatasetAnalysis, DatasetSummary,
+                                         Insight, InsightType, Pattern,
+                                         PatternType, QualityMetrics)
+from insightboost.models.visualization import (ChartType, VisualizationConfig,
+                                               VisualizationSuggestion)
 from insightboost.utils.exceptions import APIError, RateLimitError
-from insightboost.utils.formatters import (
-    format_columns_with_types,
-    format_correlation_matrix,
-    format_dataframe_for_llm,
-)
+from insightboost.utils.formatters import (format_columns_with_types,
+                                           format_correlation_matrix,
+                                           format_dataframe_for_llm)
 
 logger = get_logger("anthropic_client")
 
