@@ -41,7 +41,7 @@ InsightBoost is a comprehensive data analysis platform that leverages Anthropic'
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/insightboost.git
+git clone https://github.com/ryanneyloncs/insightboost.git
 cd insightboost
 
 # Create virtual environment
@@ -59,7 +59,7 @@ pip install -e .
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/insightboost.git
+git clone https://github.com/ryanneyloncs/insightboost.git
 cd insightboost
 
 # Build and run with Docker Compose
@@ -388,11 +388,6 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 ## Support
 
 - Documentation: [docs/](docs/)
-- Issues: [GitHub Issues](https://github.com/your-org/insightboost/issues)
-- Discussions: [GitHub Discussions](https://github.com/your-org/insightboost/discussions)
+- Issues: [GitHub Issues](https://github.com/ryanneyloncs/insightboost/issues)
+- Discussions: [GitHub Discussions](https://github.com/ryanneyloncs/insightboost/discussions)
 
-## Acknowledgments
-
-- Built with [Anthropic Claude](https://www.anthropic.com/)
-- Visualizations powered by [Plotly](https://plotly.com/)
-- Web framework: [Flask](https://flask.palletsprojects.com/)
