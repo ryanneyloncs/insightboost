@@ -1,0 +1,114 @@
+{# Dataset Card Component #}
+{# Usage: {% include "components/dataset_card.html" with dataset=dataset_data %} #}
+
+<div class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow dataset-card" 
+     data-dataset-id="{{ dataset.id }}"
+     onclick="viewDataset('{{ dataset.id }}')">
+    <div class="flex items-start justify-between">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 h-12 w-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                {% if dataset.file_format == '.csv' %}
+                <svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {% elif dataset.file_format in ['.xlsx', '.xls'] %}
+                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                {% elif dataset.file_format == '.json' %}
+                <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                {% else %}
+                <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+                {% endif %}
+            </div>
+            <div class="ml-4">
+                <h3 class="text-sm font-medium text-gray-900">{{ dataset.name }}</h3>
+                <p class="text-sm text-gray-500">
+                    {{ "{:,}".format(dataset.row_count) }} rows × {{ dataset.column_count }} columns
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+            <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                {{ dataset.file_format }}
+            </span>
+            
+            <!-- Actions dropdown -->
+            <div class="relative" onclick="event.stopPropagation();">
+                <button class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+                        onclick="toggleDropdown('dropdown-{{ dataset.id }}')">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                </button>
+                <div id="dropdown-{{ dataset.id }}" 
+                     class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <div class="py-1">
+                        <a href="#" onclick="analyzeDataset('{{ dataset.id }}')" 
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <svg class="inline h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            Analyze
+                        </a>
+                        <a href="#" onclick="createSessionForDataset('{{ dataset.id }}')" 
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <svg class="inline h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Collaborate
+                        </a>
+                        <hr class="my-1">
+                        <a href="#" onclick="deleteDataset('{{ dataset.id }}')" 
+                           class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                            <svg class="inline h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if dataset.description %}
+    <p class="mt-3 text-sm text-gray-500 line-clamp-2">{{ dataset.description }}</p>
+    {% endif %}
+    
+    <div class="mt-4 flex items-center justify-between text-xs text-gray-400">
+        <span>Created {{ dataset.created_at }}</span>
+        {% if dataset.last_analyzed %}
+        <span class="flex items-center text-green-600">
+            <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            Analyzed
+        </span>
+        {% else %}
+        <span class="text-yellow-600">Not analyzed</span>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function toggleDropdown(id) {
+        event.stopPropagation();
+        const dropdown = document.getElementById(id);
+        dropdown.classList.toggle('hidden');
+        
+        // Close dropdown when clicking outside
+        const closeDropdown = (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+                document.removeEventListener('click', closeDropdown);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeDropdown), 0);
+    }
+</script>

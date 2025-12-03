@@ -1,0 +1,31 @@
+id,name,email,age,salary,department,hire_date,performance_score,active,notes
+1,John Smith,john.smith@email.com,35,75000.00,Engineering,2020-03-15,4.2,true,Great performer
+2,Jane Doe,jane.doe@email.com,28,65000.00,Marketing,2021-06-01,3.8,true,
+3,Bob Johnson,,42,85000.00,Engineering,2019-01-10,4.5,true,Senior developer
+4,Alice Brown,alice.b@email.com,,55000.00,Sales,2022-02-20,3.5,true,New hire
+5,Charlie Wilson,charlie@email.com,31,,HR,2020-08-15,4.0,true,
+6,Diana Lee,diana.lee@email.com,45,95000.00,,2018-05-22,4.8,true,Team lead
+7,Edward Garcia,edward.g@email.com,29,62000.00,Marketing,,3.2,true,
+8,Fiona Martinez,fiona.m@email.com,38,78000.00,Engineering,2019-11-30,,true,On leave
+9,George Taylor,george.t@email.com,52,110000.00,Engineering,2015-07-01,4.9,,Director
+10,Helen Anderson,,33,68000.00,Sales,2021-03-18,3.6,true,
+11,Ivan Thomas,ivan.t@email.com,27,500000.00,Engineering,2022-09-01,3.9,true,Outlier salary - data entry error
+12,Julia White,julia.w@email.com,41,82000.00,Marketing,2019-04-15,4.1,true,
+13,Kevin Harris,kevin.h@email.com,-5,71000.00,Sales,2020-12-01,3.7,true,Invalid age - data error
+14,Laura Clark,laura.c@email.com,36,76000.00,HR,2020-01-20,4.3,false,Left company
+15,Michael Lewis,,39,88000.00,Engineering,2018-09-10,4.6,true,
+16,Nancy Walker,nancy.w@email.com,44,92000.00,Marketing,2017-06-15,4.4,true,
+17,Oscar Hall,oscar.h@email.com,30,0.00,Sales,2021-08-22,3.4,true,Salary missing - shows as 0
+18,Patricia Young,patricia.y@email.com,47,98000.00,Engineering,2016-03-01,4.7,true,
+19,Quinn King,quinn.k@email.com,26,58000.00,HR,2022-05-10,3.3,true,Intern converted
+20,Rachel Scott,rachel.s@email.com,34,73000.00,,2020-07-15,4.0,true,Department TBD
+21,Samuel Green,samuel.g@email.com,48,102000.00,Engineering,2015-01-15,4.8,true,
+22,Teresa Adams,teresa.a@email.com,32,,Marketing,2021-01-05,3.9,true,Salary under review
+23,Ulysses Baker,ulysses.b@email.com,40,85000.00,Sales,2019-06-20,4.2,true,
+24,Victoria Nelson,victoria.n@email.com,37,79000.00,Engineering,2020-04-01,4.1,true,
+25,,wendy.c@email.com,29,64000.00,HR,2021-11-15,3.7,true,Name missing
+26,Xavier Mitchell,xavier.m@email.com,43,89000.00,Marketing,2018-02-28,4.3,true,
+27,Yvonne Perez,yvonne.p@email.com,31,67000.00,Sales,2021-04-12,3.8,true,
+28,Zachary Roberts,,150,94000.00,Engineering,2017-10-01,4.5,true,Invalid age - typo
+29,Amy Turner,amy.t@email.com,35,77000.00,Marketing,2020-06-15,4.0,true,
+30,Brian Phillips,brian.p@email.com,46,96000.00,Engineering,2016-08-20,4.6,true,

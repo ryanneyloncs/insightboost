@@ -1,0 +1,789 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis - InsightBoost{% endblock %}
+
+{% block content %}
+<div class="space-y-6" id="analysis-container" data-dataset-id="{{ dataset_id }}">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                <a href="{{ url_for('index') }}" class="hover:text-gray-700">Dashboard</a>
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="text-gray-900" id="dataset-name">Loading...</span>
+            </nav>
+            <h1 class="text-2xl font-bold text-gray-900">Data Analysis</h1>
+            <p class="text-gray-500 mt-1" id="dataset-info">Loading dataset information...</p>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="openQueryModal()" 
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Ask AI
+            </button>
+            <button onclick="runAnalysis()" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">
+                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Run Analysis
+            </button>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8">
+            <button onclick="switchTab('data')" 
+                    class="tab-btn border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    data-tab="data">
+                Data Preview
+            </button>
+            <button onclick="switchTab('insights')" 
+                    class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    data-tab="insights">
+                Insights
+                <span class="ml-2 py-0.5 px-2 rounded-full text-xs bg-gray-100 text-gray-600" id="insights-count">0</span>
+            </button>
+            <button onclick="switchTab('visualizations')" 
+                    class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    data-tab="visualizations">
+                Visualizations
+            </button>
+            <button onclick="switchTab('patterns')" 
+                    class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    data-tab="patterns">
+                Patterns
+            </button>
+        </nav>
+    </div>
+    
+    <!-- Tab content -->
+    <div id="tab-content">
+        <!-- Data Preview Tab -->
+        <div id="tab-data" class="tab-panel">
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-lg font-medium text-gray-900">Data Preview</h2>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-500" id="data-pagination-info">Showing 0 rows</span>
+                        <div class="flex space-x-2">
+                            <button onclick="prevPage()" id="prev-btn" disabled
+                                    class="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50">
+                                Previous
+                            </button>
+                            <button onclick="nextPage()" id="next-btn" disabled
+                                    class="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50">
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50" id="data-table-head">
+                            <tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loading...</th></tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="data-table-body">
+                            <tr><td class="px-6 py-4 text-sm text-gray-500">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Column statistics -->
+            <div class="bg-white rounded-lg shadow mt-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900">Column Statistics</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="column-stats">
+                        <p class="text-gray-500 text-sm">Loading statistics...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Insights Tab -->
+        <div id="tab-insights" class="tab-panel hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Insights list -->
+                <div class="lg:col-span-2 space-y-4" id="insights-list">
+                    <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        <p class="mt-2">No insights yet. Run analysis or ask the AI a question.</p>
+                    </div>
+                </div>
+                
+                <!-- Insights sidebar -->
+                <div class="space-y-6">
+                    <!-- Quick query -->
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h3 class="font-medium text-gray-900 mb-3">Ask AI</h3>
+                        <form onsubmit="askQuestion(event)">
+                            <textarea id="quick-query" rows="3" 
+                                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
+                                      placeholder="What trends do you see in this data?"></textarea>
+                            <button type="submit" 
+                                    class="mt-2 w-full px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700">
+                                Generate Insights
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Insight filters -->
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h3 class="font-medium text-gray-900 mb-3">Filter Insights</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-gray-600">Type</label>
+                                <select id="filter-type" onchange="filterInsights()" 
+                                        class="mt-1 block w-full rounded-md border-gray-300 text-sm">
+                                    <option value="">All types</option>
+                                    <option value="trend">Trends</option>
+                                    <option value="correlation">Correlations</option>
+                                    <option value="anomaly">Anomalies</option>
+                                    <option value="distribution">Distributions</option>
+                                    <option value="pattern">Patterns</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">Min Confidence</label>
+                                <input type="range" id="filter-confidence" min="0" max="100" value="0" 
+                                       onchange="filterInsights()"
+                                       class="mt-1 w-full">
+                                <span class="text-xs text-gray-500"><span id="confidence-value">0</span>%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Visualizations Tab -->
+        <div id="tab-visualizations" class="tab-panel hidden">
+            <!-- Suggestions carousel -->
+            <div class="bg-white rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-lg font-medium text-gray-900">Recommended Visualizations</h2>
+                    <button onclick="getSuggestions()" class="text-sm text-primary-600 hover:text-primary-700">
+                        Refresh Suggestions
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="viz-suggestions">
+                        <p class="text-gray-500 text-sm col-span-full text-center">Loading suggestions...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Generated visualizations -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900">Generated Visualizations</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="viz-gallery">
+                        <p class="text-gray-500 text-sm col-span-full text-center">No visualizations generated yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Patterns Tab -->
+        <div id="tab-patterns" class="tab-panel hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-lg font-medium text-gray-900">Discovered Patterns</h2>
+                    <button onclick="discoverPatterns()" class="text-sm text-primary-600 hover:text-primary-700">
+                        Discover Patterns
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4" id="patterns-list">
+                        <p class="text-gray-500 text-sm text-center">Click "Discover Patterns" to analyze your data.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Query Modal -->
+<div id="query-modal" class="fixed inset-0 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75" onclick="closeQueryModal()"></div>
+        <div class="relative bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Ask AI About Your Data</h3>
+            <form onsubmit="submitQuery(event)">
+                <textarea id="query-input" rows="4" 
+                          class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                          placeholder="Example: What are the main trends in this data? Are there any anomalies?"></textarea>
+                <div class="mt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeQueryModal()" 
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700">
+                        Generate Insights
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Visualization Detail Modal -->
+<div id="viz-modal" class="fixed inset-0 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75" onclick="closeVizModal()"></div>
+        <div class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900" id="viz-modal-title">Visualization</h3>
+                <button onclick="closeVizModal()" class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="viz-modal-content" style="height: 500px;"></div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button onclick="exportViz('html')" class="px-4 py-2 border border-gray-300 rounded-md text-sm">Export HTML</button>
+                <button onclick="exportViz('png')" class="px-4 py-2 border border-gray-300 rounded-md text-sm">Export PNG</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // State
+    const datasetId = document.getElementById('analysis-container').dataset.datasetId;
+    let dataset = null;
+    let dataPage = 1;
+    let dataPagination = null;
+    let insights = [];
+    let visualizations = [];
+    let currentVizId = null;
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDataset();
+        loadData(1);
+        loadInsights();
+        getSuggestions();
+    });
+    
+    // Load dataset metadata
+    async function loadDataset() {
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                dataset = data.dataset;
+                document.getElementById('dataset-name').textContent = dataset.name;
+                document.getElementById('dataset-info').textContent = 
+                    `${dataset.row_count.toLocaleString()} rows × ${dataset.column_count} columns | ${dataset.metadata.file_format}`;
+                renderColumnStats();
+            }
+        } catch (error) {
+            showToast('Failed to load dataset', 'error');
+        }
+    }
+    
+    // Load data preview
+    async function loadData(page) {
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/data?page=${page}&per_page=50`);
+            const data = await response.json();
+            
+            if (data.success) {
+                dataPagination = data.pagination;
+                renderDataTable(data.columns, data.data);
+                updatePagination();
+            }
+        } catch (error) {
+            showToast('Failed to load data', 'error');
+        }
+    }
+    
+    // Render data table
+    function renderDataTable(columns, rows) {
+        const thead = document.getElementById('data-table-head');
+        const tbody = document.getElementById('data-table-body');
+        
+        thead.innerHTML = `<tr>${columns.map(col => 
+            `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${col}</th>`
+        ).join('')}</tr>`;
+        
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td class="px-6 py-4 text-sm text-gray-500" colspan="100">No data</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = rows.map(row => `<tr class="hover:bg-gray-50">${columns.map(col => 
+            `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row[col] !== null && row[col] !== '' ? row[col] : '<span class="text-gray-400">null</span>'}</td>`
+        ).join('')}</tr>`).join('');
+    }
+    
+    // Update pagination controls
+    function updatePagination() {
+        if (!dataPagination) return;
+        
+        const { page, per_page, total_rows, total_pages, has_next, has_prev } = dataPagination;
+        const start = (page - 1) * per_page + 1;
+        const end = Math.min(page * per_page, total_rows);
+        
+        document.getElementById('data-pagination-info').textContent = 
+            `Showing ${start}-${end} of ${total_rows.toLocaleString()} rows`;
+        document.getElementById('prev-btn').disabled = !has_prev;
+        document.getElementById('next-btn').disabled = !has_next;
+        dataPage = page;
+    }
+    
+    function prevPage() { if (dataPagination?.has_prev) loadData(dataPage - 1); }
+    function nextPage() { if (dataPagination?.has_next) loadData(dataPage + 1); }
+    
+    // Render column statistics
+    function renderColumnStats() {
+        if (!dataset) return;
+        
+        const container = document.getElementById('column-stats');
+        container.innerHTML = dataset.columns.map(col => `
+            <div class="border rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-medium text-gray-900 text-sm">${col.name}</h4>
+                    <span class="text-xs px-2 py-1 rounded-full ${getTypeColor(col.data_type)}">${col.data_type}</span>
+                </div>
+                <div class="space-y-1 text-xs text-gray-600">
+                    <p>Unique: ${col.unique_count.toLocaleString()} (${col.unique_percentage.toFixed(1)}%)</p>
+                    <p>Missing: ${col.null_count.toLocaleString()} (${col.null_percentage.toFixed(1)}%)</p>
+                    ${col.sample_values.length > 0 ? `<p class="truncate">Sample: ${col.sample_values.slice(0, 3).join(', ')}</p>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function getTypeColor(type) {
+        const colors = {
+            'numeric': 'bg-blue-100 text-blue-800',
+            'integer': 'bg-blue-100 text-blue-800',
+            'float': 'bg-blue-100 text-blue-800',
+            'categorical': 'bg-green-100 text-green-800',
+            'datetime': 'bg-purple-100 text-purple-800',
+            'text': 'bg-yellow-100 text-yellow-800',
+            'boolean': 'bg-pink-100 text-pink-800',
+        };
+        return colors[type] || 'bg-gray-100 text-gray-800';
+    }
+    
+    // Tab switching
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('border-primary-500', 'text-primary-600');
+            btn.classList.add('border-transparent', 'text-gray-500');
+        });
+        document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-500');
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-primary-500', 'text-primary-600');
+        
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+        document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+    }
+    
+    // Run analysis
+    async function runAnalysis() {
+        showLoading('Analyzing dataset with AI...');
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ depth: 'standard' })
+            });
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast(`Generated ${data.insights.length} insights and found ${data.patterns.length} patterns!`, 'success');
+                loadInsights();
+                switchTab('insights');
+            } else {
+                showToast(data.message || 'Analysis failed', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Analysis failed', 'error');
+        }
+    }
+    
+    // Load insights
+    async function loadInsights() {
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/insights`);
+            const data = await response.json();
+            
+            if (data.success) {
+                insights = data.insights;
+                renderInsights();
+                document.getElementById('insights-count').textContent = insights.length;
+            }
+        } catch (error) {
+            console.error('Failed to load insights:', error);
+        }
+    }
+    
+    // Render insights
+    function renderInsights() {
+        const container = document.getElementById('insights-list');
+        
+        if (insights.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <p class="mt-2">No insights yet. Run analysis or ask the AI a question.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = insights.map(insight => `
+            <div class="bg-white rounded-lg shadow p-5">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs px-2 py-1 rounded-full ${getInsightTypeColor(insight.insight_type)}">${insight.insight_type}</span>
+                    <span class="text-sm font-medium ${getConfidenceColor(insight.confidence)}">${(insight.confidence * 100).toFixed(0)}% confident</span>
+                </div>
+                <h3 class="font-medium text-gray-900 mb-2">${insight.title}</h3>
+                <p class="text-sm text-gray-600 mb-3">${insight.description}</p>
+                ${insight.columns_involved.length > 0 ? `
+                    <div class="flex flex-wrap gap-1">
+                        ${insight.columns_involved.map(col => `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">${col}</span>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+    
+    function getInsightTypeColor(type) {
+        const colors = {
+            'trend': 'bg-blue-100 text-blue-800',
+            'correlation': 'bg-green-100 text-green-800',
+            'anomaly': 'bg-red-100 text-red-800',
+            'distribution': 'bg-purple-100 text-purple-800',
+            'pattern': 'bg-yellow-100 text-yellow-800',
+            'summary': 'bg-gray-100 text-gray-800',
+            'comparison': 'bg-indigo-100 text-indigo-800',
+        };
+        return colors[type] || 'bg-gray-100 text-gray-800';
+    }
+    
+    function getConfidenceColor(confidence) {
+        if (confidence >= 0.8) return 'text-green-600';
+        if (confidence >= 0.5) return 'text-yellow-600';
+        return 'text-red-600';
+    }
+    
+    // Ask question
+    async function askQuestion(event) {
+        event.preventDefault();
+        const query = document.getElementById('quick-query').value.trim();
+        if (!query) return;
+        
+        showLoading('Generating insights...');
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/insights`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, max_results: 5 })
+            });
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast(`Generated ${data.count} insights!`, 'success');
+                loadInsights();
+            } else {
+                showToast(data.message || 'Failed to generate insights', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Failed to generate insights', 'error');
+        }
+    }
+    
+    // Get visualization suggestions
+    async function getSuggestions() {
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/visualizations/suggest`);
+            const data = await response.json();
+            
+            if (data.success) {
+                renderSuggestions(data.suggestions);
+            }
+        } catch (error) {
+            console.error('Failed to get suggestions:', error);
+        }
+    }
+    
+    // Render suggestions
+    function renderSuggestions(suggestions) {
+        const container = document.getElementById('viz-suggestions');
+        
+        if (suggestions.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center">No suggestions available.</p>';
+            return;
+        }
+        
+        container.innerHTML = suggestions.map(s => `
+            <div class="border rounded-lg p-4 hover:border-primary-300 cursor-pointer transition-colors" onclick="createVisualization('${s.id}')">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs px-2 py-1 rounded-full bg-primary-100 text-primary-800">${s.chart_type}</span>
+                    <span class="text-xs text-gray-500">${(s.confidence * 100).toFixed(0)}%</span>
+                </div>
+                <h4 class="font-medium text-gray-900 text-sm mb-1">${s.title}</h4>
+                <p class="text-xs text-gray-600">${s.description}</p>
+            </div>
+        `).join('');
+    }
+    
+    // Create visualization
+    async function createVisualization(suggestionId) {
+        showLoading('Generating visualization...');
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/visualizations`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ suggestion_id: suggestionId })
+            });
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast('Visualization created!', 'success');
+                loadVisualizations();
+                openVizModal(data.visualization);
+            } else {
+                showToast(data.message || 'Failed to create visualization', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Failed to create visualization', 'error');
+        }
+    }
+    
+    // Load visualizations
+    async function loadVisualizations() {
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/visualizations`);
+            const data = await response.json();
+            
+            if (data.success) {
+                visualizations = data.visualizations;
+                renderVisualizations();
+            }
+        } catch (error) {
+            console.error('Failed to load visualizations:', error);
+        }
+    }
+    
+    // Render visualizations gallery
+    function renderVisualizations() {
+        const container = document.getElementById('viz-gallery');
+        
+        if (visualizations.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center">No visualizations generated yet.</p>';
+            return;
+        }
+        
+        container.innerHTML = visualizations.map(v => `
+            <div class="border rounded-lg p-4 cursor-pointer hover:border-primary-300" onclick="viewVisualization('${v.id}')">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">${v.chart_type}</span>
+                </div>
+                <h4 class="font-medium text-gray-900 text-sm">${v.title}</h4>
+                <p class="text-xs text-gray-500 mt-1">${new Date(v.created_at).toLocaleDateString()}</p>
+            </div>
+        `).join('');
+    }
+    
+    // View visualization
+    async function viewVisualization(vizId) {
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/visualizations/${vizId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                openVizModal(data.visualization);
+            }
+        } catch (error) {
+            showToast('Failed to load visualization', 'error');
+        }
+    }
+    
+    // Open visualization modal
+    function openVizModal(visualization) {
+        currentVizId = visualization.id;
+        document.getElementById('viz-modal-title').textContent = visualization.title || 'Visualization';
+        document.getElementById('viz-modal').classList.remove('hidden');
+        
+        // Render with Plotly
+        Plotly.newPlot('viz-modal-content', visualization.figure_json.data, visualization.figure_json.layout, {responsive: true});
+    }
+    
+    function closeVizModal() {
+        document.getElementById('viz-modal').classList.add('hidden');
+        currentVizId = null;
+    }
+    
+    // Export visualization
+    async function exportViz(format) {
+        if (!currentVizId) return;
+        
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/visualizations/${currentVizId}/export?format=${format}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                if (format === 'html') {
+                    const blob = new Blob([data.data], { type: 'text/html' });
+                    downloadBlob(blob, 'visualization.html');
+                } else if (format === 'png') {
+                    const link = document.createElement('a');
+                    link.href = 'data:image/png;base64,' + data.data;
+                    link.download = 'visualization.png';
+                    link.click();
+                }
+            }
+        } catch (error) {
+            showToast('Export failed', 'error');
+        }
+    }
+    
+    function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    // Discover patterns
+    async function discoverPatterns() {
+        showLoading('Discovering patterns...');
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/patterns`);
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                renderPatterns(data.patterns);
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Failed to discover patterns', 'error');
+        }
+    }
+    
+    // Render patterns
+    function renderPatterns(patterns) {
+        const container = document.getElementById('patterns-list');
+        
+        if (patterns.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm text-center">No patterns found.</p>';
+            return;
+        }
+        
+        container.innerHTML = patterns.map(p => `
+            <div class="border rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs px-2 py-1 rounded-full ${getPatternTypeColor(p.type)}">${p.type}</span>
+                    <div class="flex items-center">
+                        <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class="bg-primary-600 h-2 rounded-full" style="width: ${p.strength * 100}%"></div>
+                        </div>
+                        <span class="text-xs text-gray-500">${(p.strength * 100).toFixed(0)}%</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-700">${p.description}</p>
+                ${p.columns.length > 0 ? `
+                    <div class="flex flex-wrap gap-1 mt-2">
+                        ${p.columns.map(col => `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">${col}</span>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+    
+    function getPatternTypeColor(type) {
+        const colors = {
+            'correlation': 'bg-blue-100 text-blue-800',
+            'trend': 'bg-green-100 text-green-800',
+            'distribution': 'bg-purple-100 text-purple-800',
+            'anomaly': 'bg-red-100 text-red-800',
+            'cluster': 'bg-yellow-100 text-yellow-800',
+            'seasonality': 'bg-indigo-100 text-indigo-800',
+        };
+        return colors[type] || 'bg-gray-100 text-gray-800';
+    }
+    
+    // Filter insights
+    function filterInsights() {
+        const type = document.getElementById('filter-type').value;
+        const minConfidence = document.getElementById('filter-confidence').value / 100;
+        document.getElementById('confidence-value').textContent = document.getElementById('filter-confidence').value;
+        
+        let filtered = insights;
+        if (type) filtered = filtered.filter(i => i.insight_type === type);
+        if (minConfidence > 0) filtered = filtered.filter(i => i.confidence >= minConfidence);
+        
+        const temp = insights;
+        insights = filtered;
+        renderInsights();
+        insights = temp;
+    }
+    
+    // Modal functions
+    function openQueryModal() { document.getElementById('query-modal').classList.remove('hidden'); }
+    function closeQueryModal() { document.getElementById('query-modal').classList.add('hidden'); }
+    
+    async function submitQuery(event) {
+        event.preventDefault();
+        const query = document.getElementById('query-input').value.trim();
+        if (!query) return;
+        
+        closeQueryModal();
+        showLoading('Generating insights...');
+        
+        try {
+            const response = await fetch(`/api/v1/datasets/${datasetId}/insights`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, max_results: 5 })
+            });
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.success) {
+                showToast(`Generated ${data.count} insights!`, 'success');
+                loadInsights();
+                switchTab('insights');
+            }
+        } catch (error) {
+            hideLoading();
+            showToast('Failed to generate insights', 'error');
+        }
+    }
+</script>
+{% endblock %}

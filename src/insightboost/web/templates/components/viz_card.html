@@ -1,0 +1,69 @@
+{# Visualization Card Component #}
+{# Usage: {% include "components/viz_card.html" with viz=viz_data %} #}
+
+<div class="bg-white rounded-lg shadow overflow-hidden viz-card" data-viz-id="{{ viz.id }}">
+    <!-- Preview area -->
+    <div class="relative h-48 bg-gray-50">
+        <div id="viz-preview-{{ viz.id }}" class="w-full h-full"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-white/50 to-transparent pointer-events-none"></div>
+    </div>
+    
+    <!-- Card content -->
+    <div class="p-4">
+        <div class="flex justify-between items-start mb-2">
+            <span class="text-xs px-2 py-1 rounded-full 
+                {% if viz.chart_type == 'scatter' %}bg-blue-100 text-blue-800
+                {% elif viz.chart_type == 'line' %}bg-green-100 text-green-800
+                {% elif viz.chart_type == 'bar' %}bg-purple-100 text-purple-800
+                {% elif viz.chart_type == 'histogram' %}bg-yellow-100 text-yellow-800
+                {% elif viz.chart_type == 'heatmap' %}bg-red-100 text-red-800
+                {% elif viz.chart_type == 'pie' %}bg-pink-100 text-pink-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ viz.chart_type | capitalize }}
+            </span>
+            {% if viz.confidence %}
+            <span class="text-xs text-gray-500">{{ (viz.confidence * 100) | round }}% match</span>
+            {% endif %}
+        </div>
+        
+        <h4 class="font-medium text-gray-900 text-sm mb-1">{{ viz.title }}</h4>
+        
+        {% if viz.description %}
+        <p class="text-xs text-gray-500 mb-3 line-clamp-2">{{ viz.description }}</p>
+        {% endif %}
+        
+        <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+            {% if viz.created_at %}
+            <span class="text-xs text-gray-400">{{ viz.created_at }}</span>
+            {% endif %}
+            <div class="flex space-x-2">
+                <button onclick="viewVisualization('{{ viz.id }}')" 
+                        class="text-xs text-primary-600 hover:text-primary-700 font-medium">
+                    View
+                </button>
+                <button onclick="exportVisualization('{{ viz.id }}')" 
+                        class="text-xs text-gray-600 hover:text-gray-700">
+                    Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize visualization preview if figure_json is available
+    (function() {
+        const vizId = '{{ viz.id }}';
+        const figureJson = {{ viz.figure_json | tojson | safe if viz.figure_json else 'null' }};
+        
+        if (figureJson) {
+            const config = { responsive: true, displayModeBar: false };
+            const layout = {
+                ...figureJson.layout,
+                margin: { t: 10, r: 10, b: 30, l: 30 },
+                showlegend: false
+            };
+            Plotly.newPlot(`viz-preview-${vizId}`, figureJson.data, layout, config);
+        }
+    })();
+</script>

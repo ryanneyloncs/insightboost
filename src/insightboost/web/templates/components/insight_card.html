@@ -1,0 +1,49 @@
+{# Insight Card Component #}
+{# Usage: {% include "components/insight_card.html" with insight=insight_data %} #}
+
+<div class="bg-white rounded-lg shadow p-5 insight-card" data-insight-id="{{ insight.id }}">
+    <div class="flex justify-between items-start mb-3">
+        <span class="text-xs px-2 py-1 rounded-full 
+            {% if insight.insight_type == 'trend' %}bg-blue-100 text-blue-800
+            {% elif insight.insight_type == 'correlation' %}bg-green-100 text-green-800
+            {% elif insight.insight_type == 'anomaly' %}bg-red-100 text-red-800
+            {% elif insight.insight_type == 'distribution' %}bg-purple-100 text-purple-800
+            {% elif insight.insight_type == 'pattern' %}bg-yellow-100 text-yellow-800
+            {% else %}bg-gray-100 text-gray-800{% endif %}">
+            {{ insight.insight_type | capitalize }}
+        </span>
+        <div class="flex items-center space-x-2">
+            <span class="text-sm font-medium 
+                {% if insight.confidence >= 0.8 %}text-green-600
+                {% elif insight.confidence >= 0.5 %}text-yellow-600
+                {% else %}text-red-600{% endif %}">
+                {{ (insight.confidence * 100) | round }}% confident
+            </span>
+        </div>
+    </div>
+    
+    <h3 class="font-medium text-gray-900 mb-2">{{ insight.title }}</h3>
+    <p class="text-sm text-gray-600 mb-3">{{ insight.description }}</p>
+    
+    {% if insight.columns_involved %}
+    <div class="flex flex-wrap gap-1 mb-3">
+        {% for col in insight.columns_involved %}
+        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{{ col }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+        <span class="text-xs text-gray-400">{{ insight.created_at }}</span>
+        <div class="flex space-x-2">
+            <button onclick="explainInsight('{{ insight.id }}')" 
+                    class="text-xs text-primary-600 hover:text-primary-700">
+                Explain
+            </button>
+            <button onclick="shareInsight('{{ insight.id }}')" 
+                    class="text-xs text-primary-600 hover:text-primary-700">
+                Share
+            </button>
+        </div>
+    </div>
+</div>

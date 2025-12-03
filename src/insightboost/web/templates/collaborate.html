@@ -1,0 +1,686 @@
+{% extends "base.html" %}
+
+{% block title %}Collaborate - InsightBoost{% endblock %}
+
+{% block content %}
+<div class="space-y-6" id="collaborate-container" data-session-id="{{ session_id }}">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                <a href="{{ url_for('index') }}" class="hover:text-gray-700">Dashboard</a>
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="text-gray-900">Collaboration Session</span>
+            </nav>
+            <h1 class="text-2xl font-bold text-gray-900" id="session-name">Loading...</h1>
+            <p class="text-gray-500 mt-1" id="session-info">Connecting to session...</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Connection status -->
+            <div class="flex items-center space-x-2" id="connection-status">
+                <span class="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                <span class="text-sm text-gray-500">Connecting...</span>
+            </div>
+            
+            <!-- Participants -->
+            <div class="flex -space-x-2" id="participants-avatars">
+                <!-- Avatars will be rendered here -->
+            </div>
+            
+            <button onclick="leaveSession()" 
+                    class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50">
+                Leave Session
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main collaboration grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Canvas area -->
+        <div class="lg:col-span-3 space-y-6">
+            <!-- Shared visualization canvas -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-lg font-medium text-gray-900">Shared Canvas</h2>
+                    <div class="flex space-x-2">
+                        <button onclick="shareCurrentView()" 
+                                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
+                            Share View
+                        </button>
+                        <button onclick="takeSnapshot()" 
+                                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
+                            <svg class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Snapshot
+                        </button>
+                    </div>
+                </div>
+                <div class="relative" style="min-height: 400px;" id="shared-canvas">
+                    <!-- Cursor indicators overlay -->
+                    <div id="cursor-overlay" class="absolute inset-0 pointer-events-none z-10"></div>
+                    
+                    <!-- Visualization content -->
+                    <div id="canvas-content" class="p-6">
+                        <div class="flex items-center justify-center h-64 text-gray-400">
+                            <div class="text-center">
+                                <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                </svg>
+                                <p class="mt-2">Select a visualization to share</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shared insights -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900">Shared Insights</h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4" id="shared-insights">
+                        <p class="text-gray-500 text-sm text-center">No insights shared yet. Share an insight from the analysis view.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Participants panel -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-4 py-3 border-b border-gray-200">
+                    <h3 class="font-medium text-gray-900">Participants</h3>
+                </div>
+                <div class="p-4">
+                    <ul class="space-y-3" id="participants-list">
+                        <li class="text-sm text-gray-500">Loading...</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Comments panel -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-4 py-3 border-b border-gray-200">
+                    <h3 class="font-medium text-gray-900">Comments</h3>
+                </div>
+                <div class="flex flex-col" style="height: 300px;">
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="comments-list">
+                        <p class="text-sm text-gray-500 text-center">No comments yet</p>
+                    </div>
+                    <div class="border-t border-gray-200 p-3">
+                        <form onsubmit="sendComment(event)" class="flex space-x-2">
+                            <input type="text" id="comment-input" 
+                                   class="flex-1 rounded-md border-gray-300 text-sm focus:border-primary-500 focus:ring-primary-500"
+                                   placeholder="Add a comment...">
+                            <button type="submit" 
+                                    class="px-3 py-2 bg-primary-600 text-white rounded-md text-sm hover:bg-primary-700">
+                                Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Snapshots panel -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="font-medium text-gray-900">Snapshots</h3>
+                    <span class="text-xs text-gray-500" id="snapshot-count">0</span>
+                </div>
+                <div class="p-4 max-h-48 overflow-y-auto">
+                    <ul class="space-y-2" id="snapshots-list">
+                        <li class="text-sm text-gray-500 text-center">No snapshots yet</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Activity feed -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-4 py-3 border-b border-gray-200">
+                    <h3 class="font-medium text-gray-900">Activity</h3>
+                </div>
+                <div class="p-4 max-h-48 overflow-y-auto">
+                    <ul class="space-y-2" id="activity-feed">
+                        <li class="text-xs text-gray-500">Session started</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // State
+    const sessionId = document.getElementById('collaborate-container').dataset.sessionId;
+    let socket = null;
+    let session = null;
+    let participants = [];
+    let comments = [];
+    let snapshots = [];
+    let userId = 'user-' + Math.random().toString(36).substr(2, 9);
+    let cursorColors = {};
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSession();
+        setupSocketConnection();
+        setupCursorTracking();
+    });
+    
+    // Initialize session
+    async function initializeSession() {
+        try {
+            // First check if this is a dataset ID and we need to create a session
+            let response = await fetch(`/api/v1/sessions/${sessionId}`);
+            
+            if (!response.ok) {
+                // Session doesn't exist, try to create one with this as dataset ID
+                response = await fetch('/api/v1/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dataset_id: sessionId,
+                        name: 'Collaboration Session',
+                        user_id: userId
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    session = data.session;
+                    // Redirect to the actual session
+                    window.history.replaceState({}, '', `/collaborate/${session.id}`);
+                }
+            } else {
+                const data = await response.json();
+                session = data.session;
+            }
+            
+            if (session) {
+                updateSessionUI();
+                await joinSession();
+                loadComments();
+                loadSnapshots();
+            }
+        } catch (error) {
+            console.error('Failed to initialize session:', error);
+            showToast('Failed to connect to session', 'error');
+        }
+    }
+    
+    // Update session UI
+    function updateSessionUI() {
+        document.getElementById('session-name').textContent = session.name;
+        document.getElementById('session-info').textContent = 
+            `${session.participant_count || 1} participant(s) • Created ${new Date(session.created_at).toLocaleString()}`;
+    }
+    
+    // Join session
+    async function joinSession() {
+        try {
+            const response = await fetch(`/api/v1/sessions/${session.id}/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            
+            if (response.ok) {
+                addActivity('You joined the session');
+                loadParticipants();
+            }
+        } catch (error) {
+            console.error('Failed to join session:', error);
+        }
+    }
+    
+    // Setup WebSocket connection
+    function setupSocketConnection() {
+        socket = io();
+        
+        socket.on('connect', function() {
+            updateConnectionStatus('connected');
+            socket.emit('join_session', { session_id: session?.id || sessionId, user_id: userId });
+        });
+        
+        socket.on('disconnect', function() {
+            updateConnectionStatus('disconnected');
+        });
+        
+        socket.on('session.user_joined', function(data) {
+            if (data.user_id !== userId) {
+                addActivity(`User ${data.user_id.substr(0, 8)} joined`);
+                loadParticipants();
+            }
+        });
+        
+        socket.on('session.user_left', function(data) {
+            addActivity(`User ${data.user_id.substr(0, 8)} left`);
+            loadParticipants();
+            removeCursor(data.user_id);
+        });
+        
+        socket.on('cursor.moved', function(data) {
+            updateCursor(data);
+        });
+        
+        socket.on('insight.created', function(data) {
+            addSharedInsight(data);
+            addActivity(`New insight shared`);
+        });
+        
+        socket.on('visualization.shared', function(data) {
+            updateSharedVisualization(data);
+            addActivity(`Visualization shared`);
+        });
+        
+        socket.on('insight.commented', function(data) {
+            addComment(data, false);
+        });
+    }
+    
+    // Update connection status
+    function updateConnectionStatus(status) {
+        const container = document.getElementById('connection-status');
+        if (status === 'connected') {
+            container.innerHTML = `
+                <span class="h-2 w-2 bg-green-400 rounded-full"></span>
+                <span class="text-sm text-gray-500">Connected</span>
+            `;
+        } else if (status === 'disconnected') {
+            container.innerHTML = `
+                <span class="h-2 w-2 bg-red-400 rounded-full"></span>
+                <span class="text-sm text-gray-500">Disconnected</span>
+            `;
+        } else {
+            container.innerHTML = `
+                <span class="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                <span class="text-sm text-gray-500">Connecting...</span>
+            `;
+        }
+    }
+    
+    // Load participants
+    async function loadParticipants() {
+        if (!session) return;
+        
+        try {
+            const response = await fetch(`/api/v1/sessions/${session.id}/participants`);
+            const data = await response.json();
+            
+            if (data.success) {
+                participants = data.participants;
+                renderParticipants();
+            }
+        } catch (error) {
+            console.error('Failed to load participants:', error);
+        }
+    }
+    
+    // Render participants
+    function renderParticipants() {
+        const list = document.getElementById('participants-list');
+        const avatars = document.getElementById('participants-avatars');
+        
+        if (participants.length === 0) {
+            list.innerHTML = '<li class="text-sm text-gray-500">No participants</li>';
+            avatars.innerHTML = '';
+            return;
+        }
+        
+        // Assign colors to participants
+        const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-yellow-500'];
+        participants.forEach((p, i) => {
+            cursorColors[p.user_id] = colors[i % colors.length];
+        });
+        
+        list.innerHTML = participants.map((p, i) => `
+            <li class="flex items-center space-x-2">
+                <div class="h-8 w-8 rounded-full ${colors[i % colors.length]} flex items-center justify-center text-white text-sm font-medium">
+                    ${p.user_id.substr(5, 2).toUpperCase()}
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-900">${p.is_owner ? 'Host' : 'Participant'}</p>
+                    <p class="text-xs text-gray-500">${p.user_id.substr(0, 12)}...</p>
+                </div>
+                ${p.has_cursor ? '<span class="h-2 w-2 bg-green-400 rounded-full"></span>' : ''}
+            </li>
+        `).join('');
+        
+        avatars.innerHTML = participants.slice(0, 4).map((p, i) => `
+            <div class="h-8 w-8 rounded-full ${colors[i % colors.length]} border-2 border-white flex items-center justify-center text-white text-xs font-medium">
+                ${p.user_id.substr(5, 2).toUpperCase()}
+            </div>
+        `).join('') + (participants.length > 4 ? `
+            <div class="h-8 w-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-gray-600 text-xs font-medium">
+                +${participants.length - 4}
+            </div>
+        ` : '');
+    }
+    
+    // Setup cursor tracking
+    function setupCursorTracking() {
+        const canvas = document.getElementById('shared-canvas');
+        
+        canvas.addEventListener('mousemove', throttle(function(e) {
+            if (!socket || !session) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            
+            socket.emit('cursor_move', {
+                session_id: session.id,
+                user_id: userId,
+                x: x,
+                y: y
+            });
+        }, 50));
+    }
+    
+    // Update remote cursor
+    function updateCursor(data) {
+        const overlay = document.getElementById('cursor-overlay');
+        let cursor = document.getElementById(`cursor-${data.user_id}`);
+        
+        if (!cursor) {
+            cursor = document.createElement('div');
+            cursor.id = `cursor-${data.user_id}`;
+            cursor.className = 'absolute transition-all duration-100';
+            cursor.innerHTML = `
+                <svg class="h-5 w-5 ${cursorColors[data.user_id] || 'text-blue-500'}" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 4l16 8-8 3-3 8-5-19z"/>
+                </svg>
+                <span class="text-xs ${cursorColors[data.user_id] || 'bg-blue-500'} text-white px-1 rounded ml-2">${data.user_id.substr(5, 4)}</span>
+            `;
+            overlay.appendChild(cursor);
+        }
+        
+        cursor.style.left = `${data.x * 100}%`;
+        cursor.style.top = `${data.y * 100}%`;
+    }
+    
+    // Remove cursor
+    function removeCursor(userId) {
+        const cursor = document.getElementById(`cursor-${userId}`);
+        if (cursor) cursor.remove();
+    }
+    
+    // Load comments
+    async function loadComments() {
+        if (!session) return;
+        
+        try {
+            const response = await fetch(`/api/v1/sessions/${session.id}/comments`);
+            const data = await response.json();
+            
+            if (data.success) {
+                comments = data.comments;
+                renderComments();
+            }
+        } catch (error) {
+            console.error('Failed to load comments:', error);
+        }
+    }
+    
+    // Render comments
+    function renderComments() {
+        const container = document.getElementById('comments-list');
+        
+        if (comments.length === 0) {
+            container.innerHTML = '<p class="text-sm text-gray-500 text-center">No comments yet</p>';
+            return;
+        }
+        
+        container.innerHTML = comments.map(c => `
+            <div class="bg-gray-50 rounded-lg p-3">
+                <div class="flex justify-between items-start mb-1">
+                    <span class="text-xs font-medium text-gray-700">${c.user_id.substr(0, 10)}...</span>
+                    <span class="text-xs text-gray-400">${formatTime(c.created_at)}</span>
+                </div>
+                <p class="text-sm text-gray-600">${c.content}</p>
+            </div>
+        `).join('');
+        
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    // Send comment
+    async function sendComment(event) {
+        event.preventDefault();
+        
+        const input = document.getElementById('comment-input');
+        const content = input.value.trim();
+        if (!content || !session) return;
+        
+        try {
+            const response = await fetch(`/api/v1/sessions/${session.id}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, content })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                addComment(data.comment, true);
+                input.value = '';
+                
+                // Broadcast via socket
+                socket.emit('add_comment', {
+                    session_id: session.id,
+                    ...data.comment
+                });
+            }
+        } catch (error) {
+            showToast('Failed to send comment', 'error');
+        }
+    }
+    
+    // Add comment to list
+    function addComment(comment, isLocal) {
+        if (!isLocal) {
+            comments.push(comment);
+        }
+        renderComments();
+    }
+    
+    // Load snapshots
+    async function loadSnapshots() {
+        if (!session) return;
+        
+        try {
+            const response = await fetch(`/api/v1/sessions/${session.id}/snapshots`);
+            const data = await response.json();
+            
+            if (data.success) {
+                snapshots = data.snapshots;
+                renderSnapshots();
+            }
+        } catch (error) {
+            console.error('Failed to load snapshots:', error);
+        }
+    }
+    
+    // Render snapshots
+    function renderSnapshots() {
+        const container = document.getElementById('snapshots-list');
+        document.getElementById('snapshot-count').textContent = snapshots.length;
+        
+        if (snapshots.length === 0) {
+            container.innerHTML = '<li class="text-sm text-gray-500 text-center">No snapshots yet</li>';
+            return;
+        }
+        
+        container.innerHTML = snapshots.map(s => `
+            <li class="flex justify-between items-center p-2 hover:bg-gray-50 rounded cursor-pointer" onclick="loadSnapshot('${s.id}')">
+                <div>
+                    <p class="text-sm font-medium text-gray-700">${s.name}</p>
+                    <p class="text-xs text-gray-400">${formatTime(s.created_at)}</p>
+                </div>
+                <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </li>
+        `).join('');
+    }
+    
+    // Take snapshot
+    async function takeSnapshot() {
+        if (!session) return;
+        
+        const name = prompt('Snapshot name:', `Snapshot ${snapshots.length + 1}`);
+        if (!name) return;
+        
+        try {
+            const response = await fetch(`/api/v1/sessions/${session.id}/snapshots`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    name: name,
+                    description: '',
+                    visualization_ids: [],
+                    insight_ids: []
+                })
+            });
+            
+            if (response.ok) {
+                showToast('Snapshot created!', 'success');
+                loadSnapshots();
+                addActivity('Snapshot created');
+            }
+        } catch (error) {
+            showToast('Failed to create snapshot', 'error');
+        }
+    }
+    
+    // Load snapshot
+    async function loadSnapshot(snapshotId) {
+        try {
+            const response = await fetch(`/api/v1/sessions/${session.id}/snapshots/${snapshotId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(`Loaded snapshot: ${data.snapshot.name}`, 'success');
+                addActivity(`Loaded snapshot: ${data.snapshot.name}`);
+            }
+        } catch (error) {
+            showToast('Failed to load snapshot', 'error');
+        }
+    }
+    
+    // Add shared insight
+    function addSharedInsight(data) {
+        const container = document.getElementById('shared-insights');
+        const existing = container.querySelector('.text-gray-500');
+        if (existing) existing.remove();
+        
+        const insightHtml = `
+            <div class="border rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">${data.type || 'insight'}</span>
+                    <span class="text-xs text-gray-500">Shared by ${(data.user_id || 'unknown').substr(0, 8)}</span>
+                </div>
+                <h4 class="font-medium text-gray-900">${data.title || 'Insight'}</h4>
+                <p class="text-sm text-gray-600 mt-1">${data.description || ''}</p>
+            </div>
+        `;
+        container.insertAdjacentHTML('afterbegin', insightHtml);
+    }
+    
+    // Update shared visualization
+    function updateSharedVisualization(data) {
+        const container = document.getElementById('canvas-content');
+        
+        if (data.figure_json) {
+            container.innerHTML = '<div id="shared-viz" style="width: 100%; height: 400px;"></div>';
+            Plotly.newPlot('shared-viz', data.figure_json.data, data.figure_json.layout, {responsive: true});
+        }
+    }
+    
+    // Share current view
+    function shareCurrentView() {
+        if (!socket || !session) return;
+        
+        socket.emit('share_visualization', {
+            session_id: session.id,
+            user_id: userId,
+            message: 'Shared a view'
+        });
+        
+        showToast('View shared with session', 'success');
+    }
+    
+    // Add activity
+    function addActivity(message) {
+        const feed = document.getElementById('activity-feed');
+        const item = document.createElement('li');
+        item.className = 'text-xs text-gray-600 flex items-center space-x-2';
+        item.innerHTML = `
+            <span class="text-gray-400">${new Date().toLocaleTimeString()}</span>
+            <span>${message}</span>
+        `;
+        feed.insertBefore(item, feed.firstChild);
+        
+        // Keep only last 20 items
+        while (feed.children.length > 20) {
+            feed.removeChild(feed.lastChild);
+        }
+    }
+    
+    // Leave session
+    async function leaveSession() {
+        if (!confirm('Are you sure you want to leave this session?')) return;
+        
+        if (socket && session) {
+            socket.emit('leave_session', { session_id: session.id, user_id: userId });
+            
+            try {
+                await fetch(`/api/v1/sessions/${session.id}/leave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+            } catch (error) {
+                console.error('Failed to leave session:', error);
+            }
+        }
+        
+        window.location.href = '/';
+    }
+    
+    // Utility: Format time
+    function formatTime(isoString) {
+        const date = new Date(isoString);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Utility: Throttle function
+    function throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (socket && session) {
+            socket.emit('leave_session', { session_id: session.id, user_id: userId });
+        }
+    });
+</script>
+{% endblock %}

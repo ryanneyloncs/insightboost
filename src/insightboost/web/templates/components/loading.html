@@ -1,0 +1,29 @@
+{# Loading Spinner Component #}
+{# Usage: {% include "components/loading.html" %} #}
+{# Or with custom message: {% include "components/loading.html" with message="Loading data..." %} #}
+
+<div class="loading-spinner flex flex-col items-center justify-center p-8">
+    <div class="relative">
+        <!-- Outer ring -->
+        <div class="w-12 h-12 rounded-full border-4 border-gray-200"></div>
+        <!-- Spinning ring -->
+        <div class="absolute top-0 left-0 w-12 h-12 rounded-full border-4 border-transparent border-t-primary-600 animate-spin"></div>
+    </div>
+    
+    {% if message %}
+    <p class="mt-4 text-sm text-gray-600">{{ message }}</p>
+    {% else %}
+    <p class="mt-4 text-sm text-gray-600">Loading...</p>
+    {% endif %}
+</div>
+
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .loading-spinner .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+</style>

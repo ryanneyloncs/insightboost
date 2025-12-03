@@ -1,0 +1,176 @@
+# InsightBoost Docker Compose Configuration
+# Supports development, testing, and production environments
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Main Application Service
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: insightboost-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      # API Keys (from .env file)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # Application settings
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      # Database (if using)
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/insightboost.db}
+      # Redis (for caching/sessions)
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      # Rate limiting
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=${RATE_LIMIT_REQUESTS_PER_MINUTE:-60}
+      - RATE_LIMIT_TOKENS_PER_MINUTE=${RATE_LIMIT_TOKENS_PER_MINUTE:-100000}
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+      - uploads:/app/uploads
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - insightboost-network
+
+  # ============================================
+  # Redis Cache Service
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: insightboost-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - insightboost-network
+
+  # ============================================
+  # Development Service (with hot reload)
+  # ============================================
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: insightboost-dev
+    ports:
+      - "${DEV_PORT:-8000}:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - LOG_LEVEL=DEBUG
+      - SECRET_KEY=dev-secret-key
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      # Mount source for hot reloading
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      - app-data:/app/data
+      - uploads:/app/uploads
+    depends_on:
+      - redis
+    networks:
+      - insightboost-network
+    profiles:
+      - dev
+
+  # ============================================
+  # Test Runner Service
+  # ============================================
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: insightboost-test
+    environment:
+      - ANTHROPIC_API_KEY=test-api-key
+      - FLASK_ENV=testing
+      - LOG_LEVEL=WARNING
+      - PYTHONPATH=/app/src
+    volumes:
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      - ./pytest.ini:/app/pytest.ini:ro
+      - test-results:/app/test-results
+    command: >
+      pytest tests/
+      --verbose
+      --cov=insightboost
+      --cov-report=term-missing
+      --cov-report=html:/app/test-results/coverage
+      --junitxml=/app/test-results/junit.xml
+    networks:
+      - insightboost-network
+    profiles:
+      - test
+
+  # ============================================
+  # Documentation Builder Service
+  # ============================================
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: insightboost-docs
+    ports:
+      - "${DOCS_PORT:-8080}:8080"
+    volumes:
+      - ./docs:/app/docs
+      - docs-build:/app/docs/_build
+    command: >
+      sh -c "pip install sphinx sphinx-rtd-theme && 
+             cd /app/docs && 
+             sphinx-autobuild . _build/html --host 0.0.0.0 --port 8080"
+    profiles:
+      - docs
+    networks:
+      - insightboost-network
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  insightboost-network:
+    driver: bridge
+    name: insightboost-network
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  app-data:
+    name: insightboost-app-data
+  app-logs:
+    name: insightboost-app-logs
+  uploads:
+    name: insightboost-uploads
+  redis-data:
+    name: insightboost-redis-data
+  test-results:
+    name: insightboost-test-results
+  docs-build:
+    name: insightboost-docs-build
