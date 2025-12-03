@@ -2,7 +2,6 @@
 Unit Tests for Data Analyzer Module
 """
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -57,7 +56,7 @@ class TestDataAnalyzer:
         """Test single column analysis via create_profile."""
         df = pd.DataFrame({"test": [1, 2, 3, 4, 5]})
         profile = analyzer.create_profile(df)
-        
+
         assert len(profile.columns) == 1
         col = profile.columns[0]
         assert col.name == "test"
@@ -68,7 +67,7 @@ class TestDataAnalyzer:
         """Test column analysis with null values."""
         df = pd.DataFrame({"test": [1, 2, None, 4, None]})
         profile = analyzer.create_profile(df)
-        
+
         col = profile.columns[0]
         assert col.null_count == 2
         assert col.null_percentage == 40.0
@@ -77,7 +76,7 @@ class TestDataAnalyzer:
         """Test that numeric columns have statistics."""
         df = pd.DataFrame({"test": [10, 20, 30, 40, 50]})
         profile = analyzer.create_profile(df)
-        
+
         col = profile.columns[0]
         assert col.statistics is not None
         assert col.statistics.get("mean") == 30.0
@@ -86,32 +85,34 @@ class TestDataAnalyzer:
 
     def test_compute_correlations(self, analyzer):
         """Test correlation computation."""
-        df = pd.DataFrame({
-            "x": [1, 2, 3, 4, 5],
-            "y": [2, 4, 6, 8, 10],
-        })
+        df = pd.DataFrame(
+            {
+                "x": [1, 2, 3, 4, 5],
+                "y": [2, 4, 6, 8, 10],
+            }
+        )
         result = analyzer.compute_correlations(df)
-        
+
         assert result is not None
         assert len(result) > 0
 
     def test_detect_outliers(self, analyzer):
         """Test outlier detection."""
-        df = pd.DataFrame({
-            "value": [10, 11, 12, 13, 14, 15, 1000]
-        })
+        df = pd.DataFrame({"value": [10, 11, 12, 13, 14, 15, 1000]})
         result = analyzer.detect_outliers(df)
-        
+
         assert result is not None
 
     def test_create_profile(self, analyzer):
         """Test full dataset profiling."""
-        df = pd.DataFrame({
-            "num": [1, 2, 3, 4, 5],
-            "cat": ["A", "B", "A", "B", "A"],
-        })
+        df = pd.DataFrame(
+            {
+                "num": [1, 2, 3, 4, 5],
+                "cat": ["A", "B", "A", "B", "A"],
+            }
+        )
         profile = analyzer.create_profile(df)
-        
+
         assert profile is not None
         assert profile.row_count == 5
         assert profile.column_count == 2
@@ -120,33 +121,37 @@ class TestDataAnalyzer:
     def test_create_profile_empty_df_raises(self, analyzer):
         """Test profiling empty dataframe raises error."""
         df = pd.DataFrame()
-        
+
         with pytest.raises(Exception):
             analyzer.create_profile(df)
 
     def test_analyze_missing_values(self, analyzer):
         """Test missing value analysis."""
-        df = pd.DataFrame({
-            "a": [1, 2, None, 4],
-            "b": [None, None, 3, 4],
-        })
+        df = pd.DataFrame(
+            {
+                "a": [1, 2, None, 4],
+                "b": [None, None, 3, 4],
+            }
+        )
         result = analyzer.analyze_missing_values(df)
-        
+
         assert result is not None
 
     def test_get_cardinality(self, analyzer):
         """Test cardinality calculation."""
         df = pd.DataFrame({"col": ["A", "B", "A", "C", "B"]})
         result = analyzer.get_cardinality(df)
-        
+
         assert result["col"] == 3
 
     def test_identify_quality_issues(self, analyzer):
         """Test quality issue identification."""
-        df = pd.DataFrame({
-            "a": [1, 2, None, 4, None],
-            "b": ["x", "x", "x", "x", "x"],  # Low variance
-        })
+        df = pd.DataFrame(
+            {
+                "a": [1, 2, None, 4, None],
+                "b": ["x", "x", "x", "x", "x"],  # Low variance
+            }
+        )
         result = analyzer.identify_quality_issues(df)
-        
+
         assert result is not None

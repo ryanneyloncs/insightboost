@@ -2,8 +2,7 @@
 Unit Tests for Anthropic Client Module
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from insightboost.api.anthropic_client import AnthropicClient
 from insightboost.api.rate_limiter import RateLimiter
@@ -22,7 +21,7 @@ class TestAnthropicClient:
         """Test client has anthropic client attribute."""
         with patch("anthropic.Anthropic") as mock:
             client = AnthropicClient()
-            assert hasattr(client, 'client') or hasattr(client, '_client')
+            assert hasattr(client, "client") or hasattr(client, "_client")
 
 
 class TestRateLimiter:

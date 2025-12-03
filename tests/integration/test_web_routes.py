@@ -4,13 +4,9 @@ Tests all API endpoints with Flask test client
 """
 
 import io
-import json
-from pathlib import Path
-from typing import Dict
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import pandas as pd
 import pytest
 
 
@@ -44,7 +40,7 @@ class TestDatasetsAPI:
             },
             content_type="multipart/form-data",
         )
-        
+
         assert response.status_code in [200, 201]
         data = response.get_json()
         assert data.get("success") is True
@@ -57,7 +53,7 @@ class TestDatasetsAPI:
             data={"name": "Test"},
             content_type="multipart/form-data",
         )
-        
+
         assert response.status_code == 400
         data = response.get_json()
         assert data.get("success") is False
@@ -72,7 +68,7 @@ class TestDatasetsAPI:
             },
             content_type="multipart/form-data",
         )
-        
+
         assert response.status_code == 400
 
     def test_upload_empty_file(self, client):
@@ -85,7 +81,7 @@ class TestDatasetsAPI:
             },
             content_type="multipart/form-data",
         )
-        
+
         assert response.status_code == 400
 
     # ============================================
@@ -95,7 +91,7 @@ class TestDatasetsAPI:
     def test_list_datasets_empty(self, client):
         """Test listing datasets when none exist."""
         response = client.get("/api/v1/datasets")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert data.get("success") is True
@@ -113,10 +109,10 @@ class TestDatasetsAPI:
             },
             content_type="multipart/form-data",
         )
-        
+
         response = client.get("/api/v1/datasets")
         data = response.get_json()
-        
+
         assert len(data["datasets"]) >= 1
 
     def test_get_dataset_by_id(self, client, sample_csv_bytes):
@@ -131,10 +127,10 @@ class TestDatasetsAPI:
             content_type="multipart/form-data",
         )
         dataset_id = upload_response.get_json()["dataset_id"]
-        
+
         # Get by ID
         response = client.get(f"/api/v1/datasets/{dataset_id}")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert data["dataset"]["id"] == dataset_id
@@ -143,7 +139,7 @@ class TestDatasetsAPI:
         """Test getting a dataset that doesn't exist."""
         fake_id = str(uuid4())
         response = client.get(f"/api/v1/datasets/{fake_id}")
-        
+
         assert response.status_code == 404
 
     # ============================================
@@ -162,10 +158,10 @@ class TestDatasetsAPI:
             content_type="multipart/form-data",
         )
         dataset_id = upload_response.get_json()["dataset_id"]
-        
+
         # Get data
         response = client.get(f"/api/v1/datasets/{dataset_id}/data")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert "data" in data
@@ -183,12 +179,10 @@ class TestDatasetsAPI:
             content_type="multipart/form-data",
         )
         dataset_id = upload_response.get_json()["dataset_id"]
-        
+
         # Get with pagination params
-        response = client.get(
-            f"/api/v1/datasets/{dataset_id}/data?page=1&per_page=10"
-        )
-        
+        response = client.get(f"/api/v1/datasets/{dataset_id}/data?page=1&per_page=10")
+
         data = response.get_json()
         assert len(data["data"]) <= 10
         assert data["pagination"]["per_page"] == 10
@@ -209,12 +203,12 @@ class TestDatasetsAPI:
             content_type="multipart/form-data",
         )
         dataset_id = upload_response.get_json()["dataset_id"]
-        
+
         # Delete
         response = client.delete(f"/api/v1/datasets/{dataset_id}")
-        
+
         assert response.status_code == 200
-        
+
         # Verify deleted
         get_response = client.get(f"/api/v1/datasets/{dataset_id}")
         assert get_response.status_code == 404
@@ -223,7 +217,7 @@ class TestDatasetsAPI:
         """Test deleting a dataset that doesn't exist."""
         fake_id = str(uuid4())
         response = client.delete(f"/api/v1/datasets/{fake_id}")
-        
+
         assert response.status_code == 404
 
 
@@ -240,7 +234,7 @@ class TestInsightsAPI:
         buffer = io.BytesIO()
         sample_sales_data.to_csv(buffer, index=False)
         buffer.seek(0)
-        
+
         response = client.post(
             "/api/v1/datasets",
             data={
@@ -265,12 +259,12 @@ class TestInsightsAPI:
                     "insight_type": "trend",
                 }
             ]
-            
+
             response = client.post(
                 f"/api/v1/datasets/{uploaded_dataset}/insights",
                 json={"query": "What trends exist?", "max_results": 5},
             )
-            
+
             assert response.status_code == 200
             data = response.get_json()
             assert data.get("success") is True
@@ -278,7 +272,7 @@ class TestInsightsAPI:
     def test_list_insights(self, client, uploaded_dataset):
         """Test listing insights for a dataset."""
         response = client.get(f"/api/v1/datasets/{uploaded_dataset}/insights")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert "insights" in data
@@ -286,7 +280,7 @@ class TestInsightsAPI:
     def test_quick_analyze(self, client, uploaded_dataset):
         """Test quick analysis endpoint."""
         response = client.get(f"/api/v1/datasets/{uploaded_dataset}/quick-analyze")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert data.get("success") is True
@@ -305,7 +299,7 @@ class TestVisualizationsAPI:
         buffer = io.BytesIO()
         sample_sales_data.to_csv(buffer, index=False)
         buffer.seek(0)
-        
+
         response = client.post(
             "/api/v1/datasets",
             data={
@@ -318,7 +312,9 @@ class TestVisualizationsAPI:
 
     def test_get_suggestions(self, client, uploaded_dataset):
         """Test visualization suggestions endpoint."""
-        with patch("insightboost.web.routes.visualizations.VisualizationSuggester") as mock_sug:
+        with patch(
+            "insightboost.web.routes.visualizations.VisualizationSuggester"
+        ) as mock_sug:
             mock_instance = MagicMock()
             mock_sug.return_value = mock_instance
             mock_instance.suggest_visualizations.return_value = [
@@ -329,18 +325,20 @@ class TestVisualizationsAPI:
                     "confidence": 0.9,
                 }
             ]
-            
+
             response = client.get(
                 f"/api/v1/datasets/{uploaded_dataset}/visualizations/suggest"
             )
-            
+
             assert response.status_code == 200
             data = response.get_json()
             assert "suggestions" in data
 
     def test_create_visualization(self, client, uploaded_dataset):
         """Test creating a visualization."""
-        with patch("insightboost.web.routes.visualizations.VisualizationSuggester") as mock_sug:
+        with patch(
+            "insightboost.web.routes.visualizations.VisualizationSuggester"
+        ) as mock_sug:
             mock_instance = MagicMock()
             mock_sug.return_value = mock_instance
             mock_instance.generate_visualization.return_value = {
@@ -349,7 +347,7 @@ class TestVisualizationsAPI:
                 "title": "Test Chart",
                 "figure_json": {"data": [], "layout": {}},
             }
-            
+
             response = client.post(
                 f"/api/v1/datasets/{uploaded_dataset}/visualizations",
                 json={
@@ -361,15 +359,13 @@ class TestVisualizationsAPI:
                     }
                 },
             )
-            
+
             assert response.status_code in [200, 201]
 
     def test_list_visualizations(self, client, uploaded_dataset):
         """Test listing visualizations."""
-        response = client.get(
-            f"/api/v1/datasets/{uploaded_dataset}/visualizations"
-        )
-        
+        response = client.get(f"/api/v1/datasets/{uploaded_dataset}/visualizations")
+
         assert response.status_code == 200
         data = response.get_json()
         assert "visualizations" in data
@@ -377,7 +373,7 @@ class TestVisualizationsAPI:
     def test_get_chart_types(self, client):
         """Test getting available chart types."""
         response = client.get("/api/v1/visualizations/chart-types")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert "chart_types" in data
@@ -396,7 +392,7 @@ class TestCollaborationAPI:
         buffer = io.BytesIO()
         sample_sales_data.to_csv(buffer, index=False)
         buffer.seek(0)
-        
+
         response = client.post(
             "/api/v1/datasets",
             data={
@@ -417,7 +413,7 @@ class TestCollaborationAPI:
                 "user_id": "user-123",
             },
         )
-        
+
         assert response.status_code in [200, 201]
         data = response.get_json()
         assert data.get("success") is True
@@ -426,7 +422,7 @@ class TestCollaborationAPI:
     def test_list_sessions(self, client):
         """Test listing sessions."""
         response = client.get("/api/v1/sessions")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert "sessions" in data
@@ -443,13 +439,13 @@ class TestCollaborationAPI:
             },
         )
         session_id = create_response.get_json()["session"]["id"]
-        
+
         # Join session
         response = client.post(
             f"/api/v1/sessions/{session_id}/join",
             json={"user_id": "user-456"},
         )
-        
+
         assert response.status_code == 200
 
     def test_add_comment(self, client, uploaded_dataset):
@@ -464,7 +460,7 @@ class TestCollaborationAPI:
             },
         )
         session_id = create_response.get_json()["session"]["id"]
-        
+
         # Add comment
         response = client.post(
             f"/api/v1/sessions/{session_id}/comments",
@@ -473,7 +469,7 @@ class TestCollaborationAPI:
                 "content": "This is a test comment",
             },
         )
-        
+
         assert response.status_code in [200, 201]
 
     def test_create_snapshot(self, client, uploaded_dataset):
@@ -488,7 +484,7 @@ class TestCollaborationAPI:
             },
         )
         session_id = create_response.get_json()["session"]["id"]
-        
+
         # Create snapshot
         response = client.post(
             f"/api/v1/sessions/{session_id}/snapshots",
@@ -499,7 +495,7 @@ class TestCollaborationAPI:
                 "insight_ids": [],
             },
         )
-        
+
         assert response.status_code in [200, 201]
 
 
@@ -513,7 +509,7 @@ class TestHealthAndInfo:
     def test_health_endpoint(self, client):
         """Test health check endpoint."""
         response = client.get("/health")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert data.get("status") == "healthy"
@@ -521,7 +517,7 @@ class TestHealthAndInfo:
     def test_api_info_endpoint(self, client):
         """Test API info endpoint."""
         response = client.get("/api/v1/info")
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert "version" in data or "name" in data
@@ -537,7 +533,7 @@ class TestErrorHandling:
     def test_404_error(self, client):
         """Test 404 error handling."""
         response = client.get("/api/v1/nonexistent-endpoint")
-        
+
         assert response.status_code == 404
 
     def test_invalid_json(self, client):
@@ -547,7 +543,7 @@ class TestErrorHandling:
             data="not valid json",
             content_type="application/json",
         )
-        
+
         assert response.status_code in [400, 415]
 
     def test_missing_required_field(self, client):
@@ -556,5 +552,5 @@ class TestErrorHandling:
             "/api/v1/sessions",
             json={},  # Missing required fields
         )
-        
+
         assert response.status_code == 400

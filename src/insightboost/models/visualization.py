@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class ChartType(str, Enum):
     """Supported chart types."""
-    
+
     SCATTER = "scatter"
     LINE = "line"
     BAR = "bar"
@@ -36,7 +36,7 @@ class ChartType(str, Enum):
 
 class VisualizationLibrary(str, Enum):
     """Supported visualization libraries."""
-    
+
     PLOTLY = "plotly"
     MATPLOTLIB = "matplotlib"
     SEABORN = "seaborn"
@@ -45,7 +45,7 @@ class VisualizationLibrary(str, Enum):
 class VisualizationConfig(BaseModel):
     """
     Configuration for generating a visualization.
-    
+
     Attributes:
         chart_type: Type of chart to generate
         x_column: Column for X axis
@@ -63,7 +63,7 @@ class VisualizationConfig(BaseModel):
         height: Chart height in pixels
         additional_options: Library-specific options
     """
-    
+
     chart_type: ChartType
     x_column: str | None = None
     y_column: str | None = None
@@ -79,7 +79,7 @@ class VisualizationConfig(BaseModel):
     width: int = Field(default=800, ge=200, le=2000)
     height: int = Field(default=600, ge=200, le=2000)
     additional_options: dict[str, Any] = Field(default_factory=dict)
-    
+
     def get_column_mappings(self) -> dict[str, str | None]:
         """Get all column mappings as dictionary."""
         return {
@@ -89,12 +89,17 @@ class VisualizationConfig(BaseModel):
             "size": self.size_column,
             "facet": self.facet_column,
         }
-    
+
     def get_used_columns(self) -> list[str]:
         """Get list of all columns used in this configuration."""
         columns = []
-        for col in [self.x_column, self.y_column, self.color_column, 
-                    self.size_column, self.facet_column]:
+        for col in [
+            self.x_column,
+            self.y_column,
+            self.color_column,
+            self.size_column,
+            self.facet_column,
+        ]:
             if col:
                 columns.append(col)
         columns.extend(self.hover_columns)
@@ -104,7 +109,7 @@ class VisualizationConfig(BaseModel):
 class VisualizationSuggestion(BaseModel):
     """
     AI-suggested visualization for a dataset.
-    
+
     Attributes:
         id: Unique identifier
         chart_type: Recommended chart type
@@ -118,7 +123,7 @@ class VisualizationSuggestion(BaseModel):
         priority: Suggestion priority (higher = more important)
         created_at: When the suggestion was generated
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     chart_type: ChartType
     title: str = Field(min_length=1, max_length=200)
@@ -130,33 +135,33 @@ class VisualizationSuggestion(BaseModel):
     library: VisualizationLibrary = VisualizationLibrary.PLOTLY
     priority: int = Field(default=0, ge=0, le=100)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     @field_validator("confidence")
     @classmethod
     def round_confidence(cls, v: float) -> float:
         """Round confidence to 4 decimal places."""
         return round(v, 4)
-    
+
     @property
     def x_column(self) -> str | None:
         """Get X column from config."""
         return self.config.x_column
-    
+
     @property
     def y_column(self) -> str | None:
         """Get Y column from config."""
         return self.config.y_column
-    
+
     @property
     def color_column(self) -> str | None:
         """Get color column from config."""
         return self.config.color_column
-    
+
     @property
     def size_column(self) -> str | None:
         """Get size column from config."""
         return self.config.size_column
-    
+
     def to_display_dict(self) -> dict[str, Any]:
         """Convert to dictionary suitable for display."""
         return {
@@ -168,14 +173,16 @@ class VisualizationSuggestion(BaseModel):
             "x_column": self.x_column,
             "y_column": self.y_column,
             "color_column": self.color_column,
-            "reasoning": self.reasoning[:200] + "..." if len(self.reasoning) > 200 else self.reasoning,
+            "reasoning": self.reasoning[:200] + "..."
+            if len(self.reasoning) > 200
+            else self.reasoning,
         }
 
 
 class GeneratedVisualization(BaseModel):
     """
     A generated visualization.
-    
+
     Attributes:
         id: Unique identifier
         suggestion_id: ID of the suggestion this was generated from
@@ -186,7 +193,7 @@ class GeneratedVisualization(BaseModel):
         created_at: When visualization was generated
         render_time_ms: Time to render in milliseconds
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     suggestion_id: UUID | None = None
     dataset_id: UUID
@@ -195,12 +202,12 @@ class GeneratedVisualization(BaseModel):
     image_base64: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     render_time_ms: int = Field(default=0, ge=0)
-    
+
     @property
     def has_interactive_figure(self) -> bool:
         """Check if interactive figure data is available."""
         return bool(self.figure_json)
-    
+
     @property
     def has_static_image(self) -> bool:
         """Check if static image is available."""
@@ -210,7 +217,7 @@ class GeneratedVisualization(BaseModel):
 class VisualizationExport(BaseModel):
     """
     Export configuration for a visualization.
-    
+
     Attributes:
         format: Export format (png, svg, pdf, html)
         width: Export width in pixels
@@ -218,7 +225,7 @@ class VisualizationExport(BaseModel):
         scale: Scale factor for raster exports
         include_plotlyjs: Include Plotly.js for HTML exports
     """
-    
+
     format: str = Field(default="png", pattern="^(png|svg|pdf|html|json)$")
     width: int = Field(default=1200, ge=100, le=4000)
     height: int = Field(default=800, ge=100, le=4000)

@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class InsightType(str, Enum):
     """Types of insights that can be generated."""
-    
+
     TREND = "trend"
     CORRELATION = "correlation"
     ANOMALY = "anomaly"
@@ -26,7 +26,7 @@ class InsightType(str, Enum):
 
 class PatternType(str, Enum):
     """Types of patterns that can be detected."""
-    
+
     CORRELATION = "correlation"
     TREND = "trend"
     SEASONALITY = "seasonality"
@@ -38,7 +38,7 @@ class PatternType(str, Enum):
 class Pattern(BaseModel):
     """
     A data pattern identified during analysis.
-    
+
     Attributes:
         id: Unique identifier for the pattern
         pattern_type: Type of pattern detected
@@ -47,14 +47,14 @@ class Pattern(BaseModel):
         strength: Pattern strength score (0-1)
         details: Additional pattern-specific details
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     pattern_type: PatternType
     description: str
     columns_involved: list[str] = Field(default_factory=list)
     strength: float = Field(ge=0.0, le=1.0)
     details: dict[str, Any] = Field(default_factory=dict)
-    
+
     @field_validator("strength")
     @classmethod
     def round_strength(cls, v: float) -> float:
@@ -65,7 +65,7 @@ class Pattern(BaseModel):
 class Insight(BaseModel):
     """
     An AI-generated insight from data analysis.
-    
+
     Attributes:
         id: Unique identifier for the insight
         title: Short title for the insight
@@ -77,7 +77,7 @@ class Insight(BaseModel):
         created_at: When the insight was generated
         query: Original query that generated this insight (if any)
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1, max_length=2000)
@@ -87,13 +87,13 @@ class Insight(BaseModel):
     columns_involved: list[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     query: str | None = None
-    
+
     @field_validator("confidence")
     @classmethod
     def round_confidence(cls, v: float) -> float:
         """Round confidence to 4 decimal places."""
         return round(v, 4)
-    
+
     @property
     def confidence_label(self) -> str:
         """Get human-readable confidence label."""
@@ -103,7 +103,7 @@ class Insight(BaseModel):
             return "Medium"
         else:
             return "Low"
-    
+
     def to_display_dict(self) -> dict[str, Any]:
         """Convert to dictionary suitable for display."""
         return {
@@ -121,7 +121,7 @@ class Insight(BaseModel):
 class QualityMetrics(BaseModel):
     """
     Data quality metrics for a dataset.
-    
+
     Attributes:
         completeness: Percentage of non-null values
         uniqueness: Ratio of unique values to total
@@ -129,13 +129,13 @@ class QualityMetrics(BaseModel):
         validity: Percentage of valid values
         timeliness: Freshness of data (if applicable)
     """
-    
+
     completeness: float = Field(ge=0.0, le=1.0)
     uniqueness: float = Field(ge=0.0, le=1.0)
     consistency: float = Field(ge=0.0, le=1.0)
     validity: float = Field(ge=0.0, le=1.0)
     timeliness: float | None = Field(default=None, ge=0.0, le=1.0)
-    
+
     @property
     def overall_score(self) -> float:
         """Calculate overall quality score."""
@@ -153,7 +153,7 @@ class QualityMetrics(BaseModel):
 class DatasetSummary(BaseModel):
     """
     Summary statistics for a dataset.
-    
+
     Attributes:
         row_count: Number of rows
         column_count: Number of columns
@@ -165,7 +165,7 @@ class DatasetSummary(BaseModel):
         has_missing_values: Whether dataset has missing values
         missing_value_count: Total missing values
     """
-    
+
     row_count: int = Field(ge=0)
     column_count: int = Field(ge=0)
     numeric_columns: int = Field(ge=0)
@@ -175,7 +175,7 @@ class DatasetSummary(BaseModel):
     memory_usage_bytes: int = Field(ge=0)
     has_missing_values: bool
     missing_value_count: int = Field(ge=0)
-    
+
     @property
     def missing_value_percentage(self) -> float:
         """Calculate percentage of missing values."""
@@ -188,7 +188,7 @@ class DatasetSummary(BaseModel):
 class DatasetAnalysis(BaseModel):
     """
     Complete analysis result for a dataset.
-    
+
     Attributes:
         dataset_id: ID of the analyzed dataset
         summary: Dataset summary statistics
@@ -201,7 +201,7 @@ class DatasetAnalysis(BaseModel):
         analysis_depth: Depth of analysis performed
         token_usage: API tokens used for analysis
     """
-    
+
     dataset_id: UUID
     summary: DatasetSummary
     quality_score: float = Field(ge=0.0, le=1.0)
@@ -212,24 +212,24 @@ class DatasetAnalysis(BaseModel):
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     analysis_depth: str = "standard"
     token_usage: dict[str, int] = Field(default_factory=dict)
-    
+
     @property
     def pattern_count(self) -> int:
         """Get total pattern count."""
         return len(self.patterns)
-    
+
     @property
     def insight_count(self) -> int:
         """Get total insight count."""
         return len(self.insights)
-    
+
     def get_high_confidence_insights(
         self,
         threshold: float = 0.8,
     ) -> list[Insight]:
         """Get insights above confidence threshold."""
         return [i for i in self.insights if i.confidence >= threshold]
-    
+
     def to_report_dict(self) -> dict[str, Any]:
         """Convert to dictionary suitable for reporting."""
         return {
@@ -246,7 +246,7 @@ class DatasetAnalysis(BaseModel):
 class InsightFeedback(BaseModel):
     """
     User feedback on an insight.
-    
+
     Attributes:
         insight_id: ID of the insight
         user_id: ID of the user providing feedback
@@ -254,7 +254,7 @@ class InsightFeedback(BaseModel):
         comment: Optional feedback comment
         created_at: When feedback was provided
     """
-    
+
     insight_id: UUID
     user_id: UUID
     is_helpful: bool

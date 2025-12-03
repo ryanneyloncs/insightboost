@@ -14,7 +14,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 class UserRole(str, Enum):
     """User roles in the system."""
-    
+
     VIEWER = "viewer"
     ANALYST = "analyst"
     ADMIN = "admin"
@@ -23,7 +23,7 @@ class UserRole(str, Enum):
 class User(BaseModel):
     """
     A user in the InsightBoost system.
-    
+
     Attributes:
         id: Unique identifier
         email: User's email address
@@ -35,7 +35,7 @@ class User(BaseModel):
         preferences: User preferences
         avatar_url: URL to user's avatar
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     email: EmailStr
     name: str = Field(min_length=1, max_length=100)
@@ -45,17 +45,17 @@ class User(BaseModel):
     is_active: bool = True
     preferences: dict[str, Any] = Field(default_factory=dict)
     avatar_url: str | None = None
-    
+
     @property
     def is_admin(self) -> bool:
         """Check if user is an admin."""
         return self.role == UserRole.ADMIN
-    
+
     @property
     def can_analyze(self) -> bool:
         """Check if user can perform analysis."""
         return self.role in (UserRole.ANALYST, UserRole.ADMIN)
-    
+
     def to_public_dict(self) -> dict[str, Any]:
         """Convert to dictionary safe for public display."""
         return {
@@ -64,7 +64,7 @@ class User(BaseModel):
             "role": self.role.value,
             "avatar_url": self.avatar_url,
         }
-    
+
     def to_profile_dict(self) -> dict[str, Any]:
         """Convert to dictionary for user profile."""
         return {
@@ -81,7 +81,7 @@ class User(BaseModel):
 
 class SessionStatus(str, Enum):
     """Collaboration session status."""
-    
+
     ACTIVE = "active"
     PAUSED = "paused"
     ENDED = "ended"
@@ -90,7 +90,7 @@ class SessionStatus(str, Enum):
 class CollaborationSession(BaseModel):
     """
     A real-time collaboration session.
-    
+
     Attributes:
         id: Unique identifier
         name: Session name
@@ -103,7 +103,7 @@ class CollaborationSession(BaseModel):
         expires_at: When session automatically ends
         settings: Session settings
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     name: str = Field(min_length=1, max_length=100)
     dataset_id: UUID
@@ -114,17 +114,17 @@ class CollaborationSession(BaseModel):
     max_participants: int = Field(default=10, ge=2, le=50)
     expires_at: datetime | None = None
     settings: dict[str, Any] = Field(default_factory=dict)
-    
+
     @property
     def participant_count(self) -> int:
         """Get current participant count."""
         return len(self.participants)
-    
+
     @property
     def is_full(self) -> bool:
         """Check if session is at capacity."""
         return self.participant_count >= self.max_participants
-    
+
     @property
     def is_active(self) -> bool:
         """Check if session is active."""
@@ -133,13 +133,13 @@ class CollaborationSession(BaseModel):
         if self.expires_at and datetime.utcnow() > self.expires_at:
             return False
         return True
-    
+
     def can_join(self, user_id: UUID) -> bool:
         """Check if user can join this session."""
         if user_id in self.participants:
             return True  # Already a participant
         return self.is_active and not self.is_full
-    
+
     def to_summary_dict(self) -> dict[str, Any]:
         """Convert to summary dictionary."""
         return {
@@ -157,7 +157,7 @@ class CollaborationSession(BaseModel):
 class SessionEvent(BaseModel):
     """
     An event in a collaboration session.
-    
+
     Attributes:
         id: Unique identifier
         session_id: Session this event belongs to
@@ -166,7 +166,7 @@ class SessionEvent(BaseModel):
         timestamp: When event occurred
         data: Event-specific data
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     session_id: UUID
     event_type: str
@@ -178,7 +178,7 @@ class SessionEvent(BaseModel):
 class SessionComment(BaseModel):
     """
     A comment in a collaboration session.
-    
+
     Attributes:
         id: Unique identifier
         session_id: Session this comment belongs to
@@ -190,7 +190,7 @@ class SessionComment(BaseModel):
         updated_at: When comment was last updated
         parent_id: Parent comment ID for replies
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     session_id: UUID
     user_id: UUID
@@ -200,7 +200,7 @@ class SessionComment(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     parent_id: UUID | None = None
-    
+
     @property
     def is_reply(self) -> bool:
         """Check if this is a reply to another comment."""
@@ -210,7 +210,7 @@ class SessionComment(BaseModel):
 class CursorPosition(BaseModel):
     """
     A user's cursor position for shared exploration.
-    
+
     Attributes:
         user_id: User whose cursor this is
         session_id: Session this cursor is in
@@ -219,7 +219,7 @@ class CursorPosition(BaseModel):
         element_id: ID of element cursor is over (optional)
         timestamp: When position was updated
     """
-    
+
     user_id: UUID
     session_id: UUID
     x: float = Field(ge=0.0, le=1.0)
@@ -231,7 +231,7 @@ class CursorPosition(BaseModel):
 class APIKey(BaseModel):
     """
     An API key for programmatic access.
-    
+
     Attributes:
         id: Unique identifier
         user_id: User who owns this key
@@ -244,7 +244,7 @@ class APIKey(BaseModel):
         scopes: Allowed scopes for this key
         is_active: Whether key is active
     """
-    
+
     id: UUID = Field(default_factory=uuid4)
     user_id: UUID
     name: str = Field(min_length=1, max_length=100)
@@ -255,14 +255,14 @@ class APIKey(BaseModel):
     expires_at: datetime | None = None
     scopes: list[str] = Field(default_factory=list)
     is_active: bool = True
-    
+
     @property
     def is_expired(self) -> bool:
         """Check if key is expired."""
         if self.expires_at is None:
             return False
         return datetime.utcnow() > self.expires_at
-    
+
     @property
     def is_valid(self) -> bool:
         """Check if key is valid for use."""

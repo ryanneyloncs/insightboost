@@ -1,26 +1,26 @@
 """Data models for InsightBoost."""
 
+from insightboost.models.dataset import (
+    ColumnInfo,
+    Dataset,
+    DatasetMetadata,
+)
 from insightboost.models.insight import (
-    Insight,
     DatasetAnalysis,
     DatasetSummary,
+    Insight,
     Pattern,
     QualityMetrics,
 )
-from insightboost.models.visualization import (
-    VisualizationSuggestion,
-    VisualizationConfig,
-    ChartType,
-)
-from insightboost.models.dataset import (
-    Dataset,
-    ColumnInfo,
-    DatasetMetadata,
-)
 from insightboost.models.user import (
+    CollaborationSession,
     User,
     UserRole,
-    CollaborationSession,
+)
+from insightboost.models.visualization import (
+    ChartType,
+    VisualizationConfig,
+    VisualizationSuggestion,
 )
 
 __all__ = [
