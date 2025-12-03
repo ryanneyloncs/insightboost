@@ -159,7 +159,7 @@ class InsightsGenerator:
             raise InsightGenerationError(
                 message=f"Failed to analyze dataset: {str(e)}",
                 details={"shape": df.shape, "depth": depth},
-            )
+            ) from e
 
     def get_insights(
         self,
@@ -203,7 +203,7 @@ class InsightsGenerator:
             raise InsightGenerationError(
                 message=f"Failed to generate insights: {str(e)}",
                 query=query,
-            )
+            ) from e
 
     def discover_patterns(
         self,

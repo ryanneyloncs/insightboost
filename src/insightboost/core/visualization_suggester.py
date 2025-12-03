@@ -128,7 +128,7 @@ class VisualizationSuggester:
         self,
         df: pd.DataFrame,
         suggestion: VisualizationSuggestion,
-        interactive: bool = True,
+        _interactive: bool = True,
     ) -> go.Figure:
         """
         Generate a visualization from a suggestion.
@@ -163,7 +163,7 @@ class VisualizationSuggester:
             raise VisualizationError(
                 message=f"Failed to generate visualization: {str(e)}",
                 chart_type=suggestion.chart_type.value,
-            )
+            ) from e
 
     def _create_figure(
         self,
@@ -417,8 +417,7 @@ class VisualizationSuggester:
                 return "line"
 
         # Composition / proportions
-        elif relationship_type == "composition":
-            if categorical_cols:
+        elif relationship_type == "composition" and categorical_cols:
                 first_cat = categorical_cols[0]
                 if cardinality.get(first_cat, 0) <= 10:
                     return "pie"

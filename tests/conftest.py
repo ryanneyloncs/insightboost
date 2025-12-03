@@ -1,25 +1,24 @@
-import numpy as np
+"""
+Pytest fixtures and configuration for InsightBoost tests.
+"""
 
-"""
-InsightBoost - Pytest Configuration and Fixtures
-Shared fixtures for unit and integration tests
-"""
+import sys
+from pathlib import Path
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import json
-import sys
 import tempfile
 from collections.abc import Generator
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+import numpy as np
 import pandas as pd
 import pytest
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from insightboost.config.settings import Settings
 from insightboost.models.dataset import ColumnInfo, Dataset, DatasetMetadata

@@ -122,7 +122,7 @@ class TestDataAnalyzer:
         """Test profiling empty dataframe raises error."""
         df = pd.DataFrame()
 
-        with pytest.raises(Exception):
+        with pytest.raises((ValueError, TypeError, KeyError)):
             analyzer.create_profile(df)
 
     def test_analyze_missing_values(self, analyzer):

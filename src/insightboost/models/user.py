@@ -130,9 +130,7 @@ class CollaborationSession(BaseModel):
         """Check if session is active."""
         if self.status != SessionStatus.ACTIVE:
             return False
-        if self.expires_at and datetime.utcnow() > self.expires_at:
-            return False
-        return True
+        return not (self.expires_at and datetime.utcnow() > self.expires_at)
 
     def can_join(self, user_id: UUID) -> bool:
         """Check if user can join this session."""

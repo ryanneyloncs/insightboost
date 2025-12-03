@@ -255,7 +255,7 @@ def validate_uuid(value: str, field_name: str = "id") -> str:
             message=f"Invalid UUID format for {field_name}",
             field=field_name,
             details={"value": value, "error": str(e)},
-        )
+        ) from e
 
 
 def validate_chart_type(chart_type: str) -> str:

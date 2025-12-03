@@ -19,7 +19,7 @@ class TestAnthropicClient:
 
     def test_has_client_attribute(self):
         """Test client has anthropic client attribute."""
-        with patch("anthropic.Anthropic") as mock:
+        with patch("anthropic.Anthropic"):
             client = AnthropicClient()
             assert hasattr(client, "client") or hasattr(client, "_client")
 

@@ -4,6 +4,7 @@ Insights API routes for InsightBoost.
 This module provides API endpoints for dataset management and insight generation.
 """
 
+import contextlib
 import os
 import uuid
 from datetime import datetime
@@ -309,10 +310,8 @@ def delete_dataset(dataset_id: str):
 
     # Remove file
     storage_path = _datasets[dataset_id]["storage_path"]
-    try:
+    with contextlib.suppress(OSError):
         os.remove(storage_path)
-    except OSError:
-        pass
 
     # Remove from storage
     del _datasets[dataset_id]

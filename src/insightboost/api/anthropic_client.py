@@ -49,7 +49,7 @@ logger = get_logger("anthropic_client")
 DATASET_ANALYSIS_PROMPT = """You are an expert data analyst. Analyze the following dataset metadata and sample:
 
 <dataset_info>
-- Columns: 
+- Columns:
 {columns_with_types}
 - Shape: {rows} rows × {cols} columns
 - Missing values summary: {missing_summary}
@@ -127,7 +127,7 @@ Return exactly 3-5 visualization recommendations as a JSON array:
         "title": "Descriptive title",
         "description": "What this visualization shows",
         "x_column": "column name or null",
-        "y_column": "column name or null", 
+        "y_column": "column name or null",
         "color_column": "optional column for color",
         "reasoning": "Why this visualization is appropriate",
         "confidence": 0.0-1.0
@@ -352,13 +352,13 @@ class AnthropicClient:
             raise RateLimitError(
                 message="Anthropic API rate limit exceeded",
                 retry_after=60,
-            )
+            ) from e
         except anthropic.APIError as e:
             logger.error(f"Anthropic API error: {e}")
             raise APIError(
                 message=f"Anthropic API error: {str(e)}",
                 status_code=getattr(e, "status_code", None),
-            )
+            ) from e
 
     def _extract_json(self, text: str) -> dict | list:
         """Extract JSON from response text."""
@@ -414,7 +414,6 @@ class AnthropicClient:
 
         # Prepare dataset info
         df_info = format_dataframe_for_llm(df, max_rows=20 if depth == "deep" else 10)
-        correlations = format_correlation_matrix(df)
 
         # Build prompt
         prompt = DATASET_ANALYSIS_PROMPT.format(
@@ -439,7 +438,7 @@ class AnthropicClient:
             result = self._extract_json(response.content[0].text)
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse API response: {e}")
-            raise APIError(message="Failed to parse analysis response")
+            raise APIError(message="Failed to parse analysis response") from e
 
         # Build DatasetAnalysis
         dataset_id = uuid4()
