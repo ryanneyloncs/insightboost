@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from insightboost.core.data_analyzer import DataAnalyzer
+from insightboost.utils.exceptions import DataValidationError
 
 
 class TestDataAnalyzer:
@@ -122,7 +123,7 @@ class TestDataAnalyzer:
         """Test profiling empty dataframe raises error."""
         df = pd.DataFrame()
 
-        with pytest.raises((ValueError, TypeError, KeyError)):
+        with pytest.raises(DataValidationError):
             analyzer.create_profile(df)
 
     def test_analyze_missing_values(self, analyzer):

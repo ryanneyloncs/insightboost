@@ -418,11 +418,11 @@ class VisualizationSuggester:
 
         # Composition / proportions
         elif relationship_type == "composition" and categorical_cols:
-                first_cat = categorical_cols[0]
-                if cardinality.get(first_cat, 0) <= 10:
-                    return "pie"
-                else:
-                    return "bar"
+            first_cat = categorical_cols[0]
+            if cardinality.get(first_cat, 0) <= 10:
+                return "pie"
+            else:
+                return "bar"
 
         # Default to scatter for two numeric, bar otherwise
         if len(numeric_cols) >= 2:
