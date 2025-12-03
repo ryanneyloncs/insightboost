@@ -14,8 +14,11 @@ from flask import Blueprint, jsonify, request
 from insightboost.api.anthropic_client import AnthropicClient
 from insightboost.config.logging_config import get_logger
 from insightboost.core.visualization_suggester import VisualizationSuggester
-from insightboost.models.visualization import (ChartType, VisualizationConfig,
-                                               VisualizationSuggestion)
+from insightboost.models.visualization import (
+    ChartType,
+    VisualizationConfig,
+    VisualizationSuggestion,
+)
 from insightboost.utils.exceptions import VisualizationError
 from insightboost.utils.validators import validate_chart_type
 

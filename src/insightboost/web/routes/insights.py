@@ -20,11 +20,16 @@ from insightboost.config.logging_config import get_logger
 from insightboost.config.settings import get_settings
 from insightboost.core.data_analyzer import DataAnalyzer
 from insightboost.core.insights_generator import InsightsGenerator
-from insightboost.utils.exceptions import (DatasetError, DataValidationError,
-                                           InsightGenerationError)
-from insightboost.utils.validators import (validate_analysis_depth,
-                                           validate_file_upload,
-                                           validate_query)
+from insightboost.utils.exceptions import (
+    DatasetError,
+    DataValidationError,
+    InsightGenerationError,
+)
+from insightboost.utils.validators import (
+    validate_analysis_depth,
+    validate_file_upload,
+    validate_query,
+)
 
 logger = get_logger("routes.insights")
 insights_bp = Blueprint("insights", __name__)

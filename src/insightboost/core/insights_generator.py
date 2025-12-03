@@ -14,8 +14,7 @@ from insightboost.api.anthropic_client import AnthropicClient
 from insightboost.config.logging_config import get_logger
 from insightboost.config.settings import get_settings
 from insightboost.core.data_analyzer import DataAnalyzer
-from insightboost.models.insight import (DatasetAnalysis, Insight, Pattern,
-                                         PatternType)
+from insightboost.models.insight import DatasetAnalysis, Insight, Pattern, PatternType
 from insightboost.utils.exceptions import InsightGenerationError
 from insightboost.utils.validators import validate_dataframe, validate_query
 

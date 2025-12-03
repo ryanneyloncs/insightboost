@@ -23,9 +23,11 @@ import pytest
 from insightboost.config.settings import Settings
 from insightboost.models.dataset import ColumnInfo, Dataset, DatasetMetadata
 from insightboost.models.insight import Insight, InsightType
-from insightboost.models.visualization import (ChartType,
-                                               GeneratedVisualization,
-                                               VisualizationConfig)
+from insightboost.models.visualization import (
+    ChartType,
+    GeneratedVisualization,
+    VisualizationConfig,
+)
 
 # ============================================
 # Configuration Fixtures

@@ -20,9 +20,9 @@ collaboration_bp = Blueprint("collaboration", __name__)
 _sessions: dict[str, dict[str, Any]] = {}
 _session_comments: dict[str, list[dict[str, Any]]] = {}
 _session_snapshots: dict[str, list[dict[str, Any]]] = {}
-_active_cursors: dict[str, dict[str, dict[str, Any]]] = (
-    {}
-)  # session_id -> user_id -> cursor
+_active_cursors: dict[
+    str, dict[str, dict[str, Any]]
+] = {}  # session_id -> user_id -> cursor
 
 
 def get_datasets_storage() -> dict:
