@@ -173,9 +173,11 @@ class VisualizationSuggestion(BaseModel):
             "x_column": self.x_column,
             "y_column": self.y_column,
             "color_column": self.color_column,
-            "reasoning": self.reasoning[:200] + "..."
-            if len(self.reasoning) > 200
-            else self.reasoning,
+            "reasoning": (
+                self.reasoning[:200] + "..."
+                if len(self.reasoning) > 200
+                else self.reasoning
+            ),
         }
 
 

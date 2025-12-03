@@ -423,15 +423,15 @@ class DataAnalyzer:
         return {
             "total_missing": int(total_missing),
             "total_cells": int(total_cells),
-            "missing_percentage": round(total_missing / total_cells * 100, 2)
-            if total_cells > 0
-            else 0,
+            "missing_percentage": (
+                round(total_missing / total_cells * 100, 2) if total_cells > 0 else 0
+            ),
             "column_missing": column_missing,
             "rows_with_missing": rows_with_missing,
             "complete_rows": complete_rows,
-            "complete_row_percentage": round(complete_rows / len(df) * 100, 2)
-            if len(df) > 0
-            else 0,
+            "complete_row_percentage": (
+                round(complete_rows / len(df) * 100, 2) if len(df) > 0 else 0
+            ),
         }
 
     def detect_time_series(

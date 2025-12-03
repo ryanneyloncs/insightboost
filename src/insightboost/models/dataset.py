@@ -189,9 +189,9 @@ class Dataset(BaseModel):
             "row_count": self.row_count,
             "column_count": self.column_count,
             "created_at": self.created_at.isoformat(),
-            "last_analyzed": self.last_analyzed.isoformat()
-            if self.last_analyzed
-            else None,
+            "last_analyzed": (
+                self.last_analyzed.isoformat() if self.last_analyzed else None
+            ),
             "file_format": self.metadata.file_format,
             "file_size_mb": self.metadata.file_size_mb,
             "tags": self.tags,

@@ -77,13 +77,16 @@ def suggest_visualizations(dataset_id: str):
     _datasets, load_dataframe = get_datasets_storage()
 
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     try:
         # Get query parameters
@@ -167,13 +170,16 @@ def suggest_visualizations(dataset_id: str):
 
     except Exception as e:
         logger.error(f"Suggestion generation failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "SUGGESTION_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "SUGGESTION_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @visualizations_bp.route("/datasets/<dataset_id>/visualizations/auto", methods=["GET"])
@@ -187,13 +193,16 @@ def auto_visualize(dataset_id: str):
     _datasets, load_dataframe = get_datasets_storage()
 
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     try:
         # Get columns parameter
@@ -245,13 +254,16 @@ def auto_visualize(dataset_id: str):
 
     except Exception as e:
         logger.error(f"Auto-visualization failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "AUTO_VIZ_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "AUTO_VIZ_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 # =============================================================================
@@ -279,13 +291,16 @@ def create_visualization(dataset_id: str):
     _datasets, load_dataframe = get_datasets_storage()
 
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     try:
         data = request.get_json() or {}
@@ -330,13 +345,16 @@ def create_visualization(dataset_id: str):
                     break
 
             if not suggestion:
-                return jsonify(
-                    {
-                        "error": True,
-                        "error_code": "SUGGESTION_NOT_FOUND",
-                        "message": "Suggestion not found",
-                    }
-                ), 404
+                return (
+                    jsonify(
+                        {
+                            "error": True,
+                            "error_code": "SUGGESTION_NOT_FOUND",
+                            "message": "Suggestion not found",
+                        }
+                    ),
+                    404,
+                )
 
         # Option 2: Use custom config
         elif "config" in data:
@@ -374,13 +392,16 @@ def create_visualization(dataset_id: str):
             )
 
         else:
-            return jsonify(
-                {
-                    "error": True,
-                    "error_code": "INVALID_REQUEST",
-                    "message": "Either suggestion_id or config is required",
-                }
-            ), 400
+            return (
+                jsonify(
+                    {
+                        "error": True,
+                        "error_code": "INVALID_REQUEST",
+                        "message": "Either suggestion_id or config is required",
+                    }
+                ),
+                400,
+            )
 
         logger.info(f"Generating {suggestion.chart_type.value} visualization")
 
@@ -417,24 +438,30 @@ def create_visualization(dataset_id: str):
 
         logger.info(f"Visualization created: {viz_id}")
 
-        return jsonify(
-            {
-                "success": True,
-                "visualization": visualization,
-            }
-        ), 201
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "visualization": visualization,
+                }
+            ),
+            201,
+        )
 
     except VisualizationError as e:
         return jsonify(e.to_dict()), 400
     except Exception as e:
         logger.error(f"Visualization generation failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "GENERATION_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "GENERATION_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @visualizations_bp.route("/datasets/<dataset_id>/visualizations", methods=["GET"])
@@ -443,13 +470,16 @@ def list_visualizations(dataset_id: str):
     _datasets, _ = get_datasets_storage()
 
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     # Filter visualizations by dataset
     dataset_vizs = [
@@ -481,33 +511,42 @@ def get_visualization(dataset_id: str, viz_id: str):
     _datasets, _ = get_datasets_storage()
 
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     if viz_id not in _visualizations:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Visualization not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Visualization not found",
+                }
+            ),
+            404,
+        )
 
     visualization = _visualizations[viz_id]
 
     if visualization["dataset_id"] != dataset_id:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Visualization not found for this dataset",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Visualization not found for this dataset",
+                }
+            ),
+            404,
+        )
 
     return jsonify(
         {
@@ -525,31 +564,40 @@ def delete_visualization(dataset_id: str, viz_id: str):
     _datasets, _ = get_datasets_storage()
 
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     if viz_id not in _visualizations:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Visualization not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Visualization not found",
+                }
+            ),
+            404,
+        )
 
     if _visualizations[viz_id]["dataset_id"] != dataset_id:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Visualization not found for this dataset",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Visualization not found for this dataset",
+                }
+            ),
+            404,
+        )
 
     del _visualizations[viz_id]
 
@@ -581,33 +629,42 @@ def export_visualization(dataset_id: str, viz_id: str):
     _datasets, _ = get_datasets_storage()
 
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     if viz_id not in _visualizations:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Visualization not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Visualization not found",
+                }
+            ),
+            404,
+        )
 
     visualization = _visualizations[viz_id]
 
     if visualization["dataset_id"] != dataset_id:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Visualization not found for this dataset",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Visualization not found for this dataset",
+                }
+            ),
+            404,
+        )
 
     export_format = request.args.get("format", "json")
 
@@ -652,32 +709,41 @@ def export_visualization(dataset_id: str, viz_id: str):
                     }
                 )
             except Exception as e:
-                return jsonify(
-                    {
-                        "error": True,
-                        "error_code": "EXPORT_FAILED",
-                        "message": f"Image export requires kaleido package: {e}",
-                    }
-                ), 500
+                return (
+                    jsonify(
+                        {
+                            "error": True,
+                            "error_code": "EXPORT_FAILED",
+                            "message": f"Image export requires kaleido package: {e}",
+                        }
+                    ),
+                    500,
+                )
 
         else:
-            return jsonify(
-                {
-                    "error": True,
-                    "error_code": "INVALID_FORMAT",
-                    "message": f"Unsupported format: {export_format}. Use: json, html, png, svg",
-                }
-            ), 400
+            return (
+                jsonify(
+                    {
+                        "error": True,
+                        "error_code": "INVALID_FORMAT",
+                        "message": f"Unsupported format: {export_format}. Use: json, html, png, svg",
+                    }
+                ),
+                400,
+            )
 
     except Exception as e:
         logger.error(f"Export failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "EXPORT_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "EXPORT_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 # =============================================================================

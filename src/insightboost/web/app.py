@@ -102,52 +102,64 @@ def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(400)
     def handle_bad_request(error):
         """Handle bad request errors."""
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "BAD_REQUEST",
-                "message": "Bad request",
-                "details": str(error),
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "BAD_REQUEST",
+                    "message": "Bad request",
+                    "details": str(error),
+                }
+            ),
+            400,
+        )
 
     @app.errorhandler(404)
     def handle_not_found(error):
         """Handle not found errors."""
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Resource not found",
-                "details": str(error),
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Resource not found",
+                    "details": str(error),
+                }
+            ),
+            404,
+        )
 
     @app.errorhandler(500)
     def handle_internal_error(error):
         """Handle internal server errors."""
         logger.error(f"Internal server error: {error}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "INTERNAL_ERROR",
-                "message": "An internal error occurred",
-                "details": {},
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "INTERNAL_ERROR",
+                    "message": "An internal error occurred",
+                    "details": {},
+                }
+            ),
+            500,
+        )
 
     @app.errorhandler(413)
     def handle_file_too_large(error):
         """Handle file too large errors."""
         settings = get_settings()
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "FILE_TOO_LARGE",
-                "message": f"File exceeds maximum size of {settings.max_upload_size_mb} MB",
-                "details": {},
-            }
-        ), 413
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "FILE_TOO_LARGE",
+                    "message": f"File exceeds maximum size of {settings.max_upload_size_mb} MB",
+                    "details": {},
+                }
+            ),
+            413,
+        )
 
 
 def register_template_routes(app: Flask) -> None:

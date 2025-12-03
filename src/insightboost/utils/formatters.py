@@ -273,9 +273,11 @@ def format_distribution_info(
                 {"value": str(v), "count": int(c)}
                 for v, c in value_counts.head(10).items()
             ],
-            "concentration": float(value_counts.iloc[0] / len(clean_series))
-            if len(value_counts) > 0
-            else 0,
+            "concentration": (
+                float(value_counts.iloc[0] / len(clean_series))
+                if len(value_counts) > 0
+                else 0
+            ),
         }
 
     return info

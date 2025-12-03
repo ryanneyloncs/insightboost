@@ -22,9 +22,9 @@ collaboration_bp = Blueprint("collaboration", __name__)
 _sessions: dict[str, dict[str, Any]] = {}
 _session_comments: dict[str, list[dict[str, Any]]] = {}
 _session_snapshots: dict[str, list[dict[str, Any]]] = {}
-_active_cursors: dict[
-    str, dict[str, dict[str, Any]]
-] = {}  # session_id -> user_id -> cursor
+_active_cursors: dict[str, dict[str, dict[str, Any]]] = (
+    {}
+)  # session_id -> user_id -> cursor
 
 
 def get_datasets_storage() -> dict:
@@ -57,24 +57,30 @@ def create_session():
 
         dataset_id = data.get("dataset_id")
         if not dataset_id:
-            return jsonify(
-                {
-                    "error": True,
-                    "error_code": "MISSING_FIELD",
-                    "message": "dataset_id is required",
-                }
-            ), 400
+            return (
+                jsonify(
+                    {
+                        "error": True,
+                        "error_code": "MISSING_FIELD",
+                        "message": "dataset_id is required",
+                    }
+                ),
+                400,
+            )
 
         # Verify dataset exists
         _datasets = get_datasets_storage()
         if dataset_id not in _datasets:
-            return jsonify(
-                {
-                    "error": True,
-                    "error_code": "NOT_FOUND",
-                    "message": "Dataset not found",
-                }
-            ), 404
+            return (
+                jsonify(
+                    {
+                        "error": True,
+                        "error_code": "NOT_FOUND",
+                        "message": "Dataset not found",
+                    }
+                ),
+                404,
+            )
 
         # Get session parameters
         name = data.get("name", f"Session for {_datasets[dataset_id]['name']}")
@@ -115,22 +121,28 @@ def create_session():
 
         logger.info(f"Session created: {session_id} for dataset {dataset_id}")
 
-        return jsonify(
-            {
-                "success": True,
-                "session": session,
-            }
-        ), 201
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "session": session,
+                }
+            ),
+            201,
+        )
 
     except Exception as e:
         logger.error(f"Session creation failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "CREATION_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "CREATION_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @collaboration_bp.route("/sessions", methods=["GET"])
@@ -181,13 +193,16 @@ def list_sessions():
 def get_session(session_id: str):
     """Get session details."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     session = _sessions[session_id]
 
@@ -218,13 +233,16 @@ def get_session(session_id: str):
 def end_session(session_id: str):
     """End a collaboration session."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     _sessions[session_id]["status"] = SessionStatus.ENDED.value
 
@@ -258,37 +276,46 @@ def join_session(session_id: str):
         }
     """
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     session = _sessions[session_id]
 
     # Check if session is active
     if session["status"] != SessionStatus.ACTIVE.value:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "SESSION_INACTIVE",
-                "message": "Session is not active",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "SESSION_INACTIVE",
+                    "message": "Session is not active",
+                }
+            ),
+            400,
+        )
 
     # Check if expired
     expires_at = datetime.fromisoformat(session["expires_at"])
     if expires_at < datetime.utcnow():
         session["status"] = SessionStatus.ENDED.value
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "SESSION_EXPIRED",
-                "message": "Session has expired",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "SESSION_EXPIRED",
+                    "message": "Session has expired",
+                }
+            ),
+            400,
+        )
 
     data = request.get_json() or {}
     user_id = data.get("user_id", str(uuid.uuid4()))
@@ -305,13 +332,16 @@ def join_session(session_id: str):
 
     # Check capacity
     if len(session["participants"]) >= session["max_participants"]:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "SESSION_FULL",
-                "message": "Session is at capacity",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "SESSION_FULL",
+                    "message": "Session is at capacity",
+                }
+            ),
+            400,
+        )
 
     # Add participant
     session["participants"].append(user_id)
@@ -338,13 +368,16 @@ def leave_session(session_id: str):
         }
     """
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     session = _sessions[session_id]
 
@@ -352,13 +385,16 @@ def leave_session(session_id: str):
     user_id = data.get("user_id")
 
     if not user_id:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "MISSING_FIELD",
-                "message": "user_id is required",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "MISSING_FIELD",
+                    "message": "user_id is required",
+                }
+            ),
+            400,
+        )
 
     if user_id in session["participants"]:
         session["participants"].remove(user_id)
@@ -381,13 +417,16 @@ def leave_session(session_id: str):
 def get_participants(session_id: str):
     """Get list of session participants."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     session = _sessions[session_id]
 
@@ -419,13 +458,16 @@ def get_participants(session_id: str):
 def get_cursors(session_id: str):
     """Get all active cursor positions in a session."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     cursors = _active_cursors.get(session_id, {})
 
@@ -452,25 +494,31 @@ def update_cursor(session_id: str):
         }
     """
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     data = request.get_json() or {}
     user_id = data.get("user_id")
 
     if not user_id:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "MISSING_FIELD",
-                "message": "user_id is required",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "MISSING_FIELD",
+                    "message": "user_id is required",
+                }
+            ),
+            400,
+        )
 
     cursor = {
         "user_id": user_id,
@@ -502,13 +550,16 @@ def update_cursor(session_id: str):
 def get_comments(session_id: str):
     """Get all comments in a session."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     comments = _session_comments.get(session_id, [])
 
@@ -548,13 +599,16 @@ def add_comment(session_id: str):
         }
     """
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     data = request.get_json() or {}
 
@@ -562,31 +616,40 @@ def add_comment(session_id: str):
     content = data.get("content", "").strip()
 
     if not user_id:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "MISSING_FIELD",
-                "message": "user_id is required",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "MISSING_FIELD",
+                    "message": "user_id is required",
+                }
+            ),
+            400,
+        )
 
     if not content:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "MISSING_FIELD",
-                "message": "content is required",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "MISSING_FIELD",
+                    "message": "content is required",
+                }
+            ),
+            400,
+        )
 
     if len(content) > 2000:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "CONTENT_TOO_LONG",
-                "message": "Comment must be 2000 characters or less",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "CONTENT_TOO_LONG",
+                    "message": "Comment must be 2000 characters or less",
+                }
+            ),
+            400,
+        )
 
     comment = {
         "id": str(uuid.uuid4()),
@@ -604,12 +667,15 @@ def add_comment(session_id: str):
 
     logger.info(f"Comment added to session {session_id}")
 
-    return jsonify(
-        {
-            "success": True,
-            "comment": comment,
-        }
-    ), 201
+    return (
+        jsonify(
+            {
+                "success": True,
+                "comment": comment,
+            }
+        ),
+        201,
+    )
 
 
 @collaboration_bp.route(
@@ -618,13 +684,16 @@ def add_comment(session_id: str):
 def delete_comment(session_id: str, comment_id: str):
     """Delete a comment."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     comments = _session_comments.get(session_id, [])
 
@@ -640,13 +709,16 @@ def delete_comment(session_id: str, comment_id: str):
                 }
             )
 
-    return jsonify(
-        {
-            "error": True,
-            "error_code": "NOT_FOUND",
-            "message": "Comment not found",
-        }
-    ), 404
+    return (
+        jsonify(
+            {
+                "error": True,
+                "error_code": "NOT_FOUND",
+                "message": "Comment not found",
+            }
+        ),
+        404,
+    )
 
 
 # =============================================================================
@@ -658,13 +730,16 @@ def delete_comment(session_id: str, comment_id: str):
 def get_snapshots(session_id: str):
     """Get all snapshots in a session."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     snapshots = _session_snapshots.get(session_id, [])
 
@@ -692,13 +767,16 @@ def create_snapshot(session_id: str):
         }
     """
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     data = request.get_json() or {}
 
@@ -708,13 +786,16 @@ def create_snapshot(session_id: str):
     )
 
     if not user_id:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "MISSING_FIELD",
-                "message": "user_id is required",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "MISSING_FIELD",
+                    "message": "user_id is required",
+                }
+            ),
+            400,
+        )
 
     snapshot = {
         "id": str(uuid.uuid4()),
@@ -731,12 +812,15 @@ def create_snapshot(session_id: str):
 
     logger.info(f"Snapshot created in session {session_id}")
 
-    return jsonify(
-        {
-            "success": True,
-            "snapshot": snapshot,
-        }
-    ), 201
+    return (
+        jsonify(
+            {
+                "success": True,
+                "snapshot": snapshot,
+            }
+        ),
+        201,
+    )
 
 
 @collaboration_bp.route(
@@ -745,25 +829,31 @@ def create_snapshot(session_id: str):
 def get_snapshot(session_id: str, snapshot_id: str):
     """Get a specific snapshot."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     snapshots = _session_snapshots.get(session_id, [])
     snapshot = next((s for s in snapshots if s["id"] == snapshot_id), None)
 
     if not snapshot:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Snapshot not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Snapshot not found",
+                }
+            ),
+            404,
+        )
 
     return jsonify(
         {
@@ -779,13 +869,16 @@ def get_snapshot(session_id: str, snapshot_id: str):
 def delete_snapshot(session_id: str, snapshot_id: str):
     """Delete a snapshot."""
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     snapshots = _session_snapshots.get(session_id, [])
 
@@ -800,13 +893,16 @@ def delete_snapshot(session_id: str, snapshot_id: str):
                 }
             )
 
-    return jsonify(
-        {
-            "error": True,
-            "error_code": "NOT_FOUND",
-            "message": "Snapshot not found",
-        }
-    ), 404
+    return (
+        jsonify(
+            {
+                "error": True,
+                "error_code": "NOT_FOUND",
+                "message": "Snapshot not found",
+            }
+        ),
+        404,
+    )
 
 
 # =============================================================================
@@ -828,13 +924,16 @@ def share_to_session(session_id: str):
         }
     """
     if session_id not in _sessions:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Session not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Session not found",
+                }
+            ),
+            404,
+        )
 
     data = request.get_json() or {}
 
@@ -843,22 +942,28 @@ def share_to_session(session_id: str):
     item_id = data.get("item_id")
 
     if not all([user_id, share_type, item_id]):
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "MISSING_FIELDS",
-                "message": "user_id, type, and item_id are required",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "MISSING_FIELDS",
+                    "message": "user_id, type, and item_id are required",
+                }
+            ),
+            400,
+        )
 
     if share_type not in ["insight", "visualization"]:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "INVALID_TYPE",
-                "message": "type must be 'insight' or 'visualization'",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "INVALID_TYPE",
+                    "message": "type must be 'insight' or 'visualization'",
+                }
+            ),
+            400,
+        )
 
     # Create a share event (would be broadcast via WebSocket in real app)
     share_event = {

@@ -118,24 +118,30 @@ def upload_dataset():
 
     # Check if file is present
     if "file" not in request.files:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NO_FILE",
-                "message": "No file provided",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NO_FILE",
+                    "message": "No file provided",
+                }
+            ),
+            400,
+        )
 
     file = request.files["file"]
 
     if file.filename == "":
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NO_FILENAME",
-                "message": "No file selected",
-            }
-        ), 400
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NO_FILENAME",
+                    "message": "No file selected",
+                }
+            ),
+            400,
+        )
 
     try:
         settings = get_settings()
@@ -225,27 +231,33 @@ def upload_dataset():
         )
 
         # Return dataset info with initial summary
-        return jsonify(
-            {
-                "success": True,
-                "dataset_id": dataset_id,
-                "dataset": dataset_info,
-                "message": "Dataset uploaded successfully",
-            }
-        ), 201
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "dataset_id": dataset_id,
+                    "dataset": dataset_info,
+                    "message": "Dataset uploaded successfully",
+                }
+            ),
+            201,
+        )
 
     except DatasetError as e:
         logger.error(f"Dataset error: {e.message}")
         return jsonify(e.to_dict()), 400
     except Exception as e:
         logger.error(f"Upload failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "UPLOAD_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "UPLOAD_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @insights_bp.route("/datasets", methods=["GET"])
@@ -278,13 +290,16 @@ def list_datasets():
 def get_dataset(dataset_id: str):
     """Get dataset metadata and summary."""
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     dataset = _datasets[dataset_id]
 
@@ -300,13 +315,16 @@ def get_dataset(dataset_id: str):
 def delete_dataset(dataset_id: str):
     """Delete a dataset."""
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     # Remove file
     storage_path = _datasets[dataset_id]["storage_path"]
@@ -332,13 +350,16 @@ def delete_dataset(dataset_id: str):
 def get_dataset_data(dataset_id: str):
     """Get dataset data with pagination."""
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     # Pagination parameters
     page = request.args.get("page", 1, type=int)
@@ -378,13 +399,16 @@ def get_dataset_data(dataset_id: str):
 
     except Exception as e:
         logger.error(f"Failed to get data: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "DATA_ERROR",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "DATA_ERROR",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 # =============================================================================
@@ -404,13 +428,16 @@ def analyze_dataset(dataset_id: str):
         }
     """
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     try:
         # Get request parameters
@@ -500,13 +527,16 @@ def analyze_dataset(dataset_id: str):
         return jsonify(e.to_dict()), 500
     except Exception as e:
         logger.error(f"Analysis failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "ANALYSIS_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "ANALYSIS_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @insights_bp.route("/datasets/<dataset_id>/quick-analyze", methods=["GET"])
@@ -515,13 +545,16 @@ def quick_analyze_dataset(dataset_id: str):
     Get quick statistical analysis without AI (faster).
     """
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     try:
         df = load_dataframe(dataset_id)
@@ -539,13 +572,16 @@ def quick_analyze_dataset(dataset_id: str):
 
     except Exception as e:
         logger.error(f"Quick analysis failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "ANALYSIS_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "ANALYSIS_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 # =============================================================================
@@ -565,13 +601,16 @@ def generate_insights(dataset_id: str):
         }
     """
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     try:
         # Get request parameters
@@ -632,26 +671,32 @@ def generate_insights(dataset_id: str):
         return jsonify(e.to_dict()), 500
     except Exception as e:
         logger.error(f"Insight generation failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "GENERATION_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "GENERATION_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @insights_bp.route("/datasets/<dataset_id>/insights", methods=["GET"])
 def list_insights(dataset_id: str):
     """List all generated insights for a dataset."""
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     insights = _insights.get(dataset_id, [])
 
@@ -682,25 +727,31 @@ def list_insights(dataset_id: str):
 def get_insight(dataset_id: str, insight_id: str):
     """Get a specific insight."""
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     insights = _insights.get(dataset_id, [])
     insight = next((i for i in insights if i["id"] == insight_id), None)
 
     if not insight:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Insight not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Insight not found",
+                }
+            ),
+            404,
+        )
 
     return jsonify(
         {
@@ -716,25 +767,31 @@ def get_insight(dataset_id: str, insight_id: str):
 def explain_insight(dataset_id: str, insight_id: str):
     """Get a human-readable explanation of an insight."""
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     insights = _insights.get(dataset_id, [])
     insight_dict = next((i for i in insights if i["id"] == insight_id), None)
 
     if not insight_dict:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Insight not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Insight not found",
+                }
+            ),
+            404,
+        )
 
     audience = request.args.get("audience", "business")
 
@@ -766,26 +823,32 @@ def explain_insight(dataset_id: str, insight_id: str):
 
     except Exception as e:
         logger.error(f"Failed to explain insight: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "EXPLANATION_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "EXPLANATION_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
 
 
 @insights_bp.route("/datasets/<dataset_id>/patterns", methods=["GET"])
 def discover_patterns(dataset_id: str):
     """Discover patterns in the dataset."""
     if dataset_id not in _datasets:
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "NOT_FOUND",
-                "message": "Dataset not found",
-            }
-        ), 404
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "NOT_FOUND",
+                    "message": "Dataset not found",
+                }
+            ),
+            404,
+        )
 
     try:
         # Get pattern types from query params
@@ -819,10 +882,13 @@ def discover_patterns(dataset_id: str):
 
     except Exception as e:
         logger.error(f"Pattern discovery failed: {e}")
-        return jsonify(
-            {
-                "error": True,
-                "error_code": "DISCOVERY_FAILED",
-                "message": str(e),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "error": True,
+                    "error_code": "DISCOVERY_FAILED",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
