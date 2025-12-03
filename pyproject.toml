@@ -172,3 +172,7 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 fail_under = 25
+
+[tool.isort]
+profile = "black"
+line_length = 88
