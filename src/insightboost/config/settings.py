@@ -63,16 +63,15 @@ class Settings(BaseSettings):
         # We can't access other fields directly in field_validator,
         # so we check the environment variable
         import os
+
         flask_env = os.getenv("FLASK_ENV", "development")
         if flask_env == "production" and v in insecure_defaults:
             raise ValueError(
                 "SECRET_KEY must be set to a secure random value in production. "
-                "Generate with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                'Generate with: python -c "import secrets; print(secrets.token_hex(32))"'
             )
         if len(v) < 32 and flask_env == "production":
-            raise ValueError(
-                "SECRET_KEY must be at least 32 characters in production."
-            )
+            raise ValueError("SECRET_KEY must be at least 32 characters in production.")
         return v
 
     # Database settings

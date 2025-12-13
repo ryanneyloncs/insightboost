@@ -361,7 +361,9 @@ def rate_limit(
 
             # Get client IP (handle proxies)
             if request.headers.get("X-Forwarded-For"):
-                ip_address = request.headers.get("X-Forwarded-For").split(",")[0].strip()
+                ip_address = (
+                    request.headers.get("X-Forwarded-For").split(",")[0].strip()
+                )
             else:
                 ip_address = request.remote_addr or "unknown"
 

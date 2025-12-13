@@ -108,7 +108,10 @@ def load_dataframe(dataset_id: str) -> pd.DataFrame:
 
 
 @insights_bp.route("/datasets", methods=["POST"])
-@rate_limit(requests_per_minute=10, error_message="Upload rate limit exceeded. Please wait before uploading more files.")
+@rate_limit(
+    requests_per_minute=10,
+    error_message="Upload rate limit exceeded. Please wait before uploading more files.",
+)
 def upload_dataset():
     """
     Upload a new dataset.
@@ -592,7 +595,10 @@ def quick_analyze_dataset(dataset_id: str):
 
 
 @insights_bp.route("/datasets/<dataset_id>/insights", methods=["POST"])
-@rate_limit(requests_per_minute=20, error_message="Insight generation rate limit exceeded. Please wait before making more requests.")
+@rate_limit(
+    requests_per_minute=20,
+    error_message="Insight generation rate limit exceeded. Please wait before making more requests.",
+)
 def generate_insights(dataset_id: str):
     """
     Generate insights from a natural language query.

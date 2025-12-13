@@ -64,7 +64,9 @@ def create_app(config_override: dict | None = None) -> Flask:
         # In production, restrict to configured origins
         allowed_origins = settings.allowed_origins
         CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
-        socketio.init_app(app, cors_allowed_origins=allowed_origins, async_mode="eventlet")
+        socketio.init_app(
+            app, cors_allowed_origins=allowed_origins, async_mode="eventlet"
+        )
     else:
         # In development, allow all origins for easier testing
         CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -111,6 +113,7 @@ def register_error_handlers(app: Flask) -> None:
         """Handle bad request errors."""
         # Don't expose internal error details in production
         from insightboost.config.settings import get_settings
+
         _settings = get_settings()
         details = str(error) if not _settings.is_production else {}
         return (
@@ -129,6 +132,7 @@ def register_error_handlers(app: Flask) -> None:
     def handle_not_found(error):
         """Handle not found errors."""
         from insightboost.config.settings import get_settings
+
         _settings = get_settings()
         details = str(error) if not _settings.is_production else {}
         return (
@@ -243,6 +247,7 @@ def register_socketio_events(sio: SocketIO) -> None:
 
         if not session_id or not user_id:
             from flask_socketio import emit
+
             emit("error", {"message": "session_id and user_id are required"})
             return
 
@@ -251,6 +256,7 @@ def register_socketio_events(sio: SocketIO) -> None:
 
         if session_id not in _sessions:
             from flask_socketio import emit
+
             emit("error", {"message": "Session not found"})
             return
 
@@ -259,6 +265,7 @@ def register_socketio_events(sio: SocketIO) -> None:
         # Check if session is active
         if session.get("status") != "active":
             from flask_socketio import emit
+
             emit("error", {"message": "Session is not active"})
             return
 
@@ -267,6 +274,7 @@ def register_socketio_events(sio: SocketIO) -> None:
         max_participants = session.get("max_participants", 10)
         if len(participants) >= max_participants and user_id not in participants:
             from flask_socketio import emit
+
             emit("error", {"message": "Session is full"})
             return
 

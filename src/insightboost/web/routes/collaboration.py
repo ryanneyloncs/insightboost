@@ -39,7 +39,9 @@ def get_datasets_storage() -> dict:
 
 
 @collaboration_bp.route("/sessions", methods=["POST"])
-@rate_limit(requests_per_minute=10, error_message="Session creation rate limit exceeded.")
+@rate_limit(
+    requests_per_minute=10, error_message="Session creation rate limit exceeded."
+)
 def create_session():
     """
     Create a new collaboration session.
