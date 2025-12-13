@@ -307,3 +307,102 @@ class RateLimitedExecutor:
                     time.sleep(wait_time)
 
         raise last_error or RateLimitError("Rate limit exceeded after retries")
+
+
+# =============================================================================
+# Web Request Rate Limiting
+# =============================================================================
+
+# Global rate limiters for web endpoints (keyed by IP address)
+_ip_rate_limiters: dict[str, RateLimiter] = {}
+_ip_limiter_lock = threading.Lock()
+
+
+def get_ip_rate_limiter(
+    ip_address: str,
+    requests_per_minute: int = 60,
+) -> RateLimiter:
+    """Get or create a rate limiter for an IP address."""
+    with _ip_limiter_lock:
+        if ip_address not in _ip_rate_limiters:
+            _ip_rate_limiters[ip_address] = RateLimiter(
+                requests_per_minute=requests_per_minute
+            )
+        return _ip_rate_limiters[ip_address]
+
+
+def rate_limit(
+    requests_per_minute: int = 60,
+    error_message: str = "Rate limit exceeded. Please try again later.",
+):
+    """
+    Decorator to apply rate limiting to Flask routes.
+
+    Args:
+        requests_per_minute: Maximum requests per minute per IP
+        error_message: Message to return when rate limited
+
+    Usage:
+        @app.route("/api/endpoint")
+        @rate_limit(requests_per_minute=30)
+        def my_endpoint():
+            ...
+    """
+    from functools import wraps
+
+    def decorator(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            from flask import current_app, jsonify, request
+
+            # Skip rate limiting during tests
+            if current_app.config.get("TESTING", False):
+                return func(*args, **kwargs)
+
+            # Get client IP (handle proxies)
+            if request.headers.get("X-Forwarded-For"):
+                ip_address = request.headers.get("X-Forwarded-For").split(",")[0].strip()
+            else:
+                ip_address = request.remote_addr or "unknown"
+
+            limiter = get_ip_rate_limiter(ip_address, requests_per_minute)
+
+            if not limiter.try_acquire():
+                retry_after = int(limiter.get_wait_time()) + 1
+                response = jsonify(
+                    {
+                        "error": True,
+                        "error_code": "RATE_LIMITED",
+                        "message": error_message,
+                        "retry_after": retry_after,
+                    }
+                )
+                response.status_code = 429
+                response.headers["Retry-After"] = str(retry_after)
+                return response
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def cleanup_rate_limiters(max_age_seconds: int = 3600) -> int:
+    """
+    Clean up old rate limiters to prevent memory leaks.
+    Call periodically (e.g., via a background task).
+
+    Returns:
+        Number of limiters removed
+    """
+    # Note: This is a simple implementation. In production,
+    # consider using Redis for distributed rate limiting.
+    with _ip_limiter_lock:
+        # For now, just clear all if there are too many
+        if len(_ip_rate_limiters) > 10000:
+            count = len(_ip_rate_limiters)
+            _ip_rate_limiters.clear()
+            logger.info(f"Cleared {count} rate limiters")
+            return count
+    return 0

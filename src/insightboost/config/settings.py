@@ -45,9 +45,35 @@ class Settings(BaseSettings):
     )
 
     secret_key: str = Field(
-        default="insightboost-dev-secret-key-change-in-production",
+        default="dev-only-key-not-for-production",
         description="Secret key for Flask sessions",
     )
+
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, v: str, info) -> str:
+        """Validate that secret key is secure in production."""
+        insecure_defaults = [
+            "dev-only-key-not-for-production",
+            "insightboost-dev-secret-key-change-in-production",
+            "change-me-in-production",
+            "dev-secret-key",
+            "your-secret-key-here",
+        ]
+        # We can't access other fields directly in field_validator,
+        # so we check the environment variable
+        import os
+        flask_env = os.getenv("FLASK_ENV", "development")
+        if flask_env == "production" and v in insecure_defaults:
+            raise ValueError(
+                "SECRET_KEY must be set to a secure random value in production. "
+                "Generate with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+        if len(v) < 32 and flask_env == "production":
+            raise ValueError(
+                "SECRET_KEY must be at least 32 characters in production."
+            )
+        return v
 
     # Database settings
     database_url: str = Field(
@@ -109,6 +135,12 @@ class Settings(BaseSettings):
         ge=1,
         le=65535,
         description="Flask server port",
+    )
+
+    # CORS settings
+    allowed_origins: list[str] = Field(
+        default=["http://localhost:8000", "http://127.0.0.1:8000"],
+        description="Allowed CORS origins (used in production)",
     )
 
     # Anthropic API settings

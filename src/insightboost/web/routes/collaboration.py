@@ -10,6 +10,7 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request
 
+from insightboost.api.rate_limiter import rate_limit
 from insightboost.config.logging_config import get_logger
 from insightboost.models.user import SessionStatus
 
@@ -38,6 +39,7 @@ def get_datasets_storage() -> dict:
 
 
 @collaboration_bp.route("/sessions", methods=["POST"])
+@rate_limit(requests_per_minute=10, error_message="Session creation rate limit exceeded.")
 def create_session():
     """
     Create a new collaboration session.

@@ -59,9 +59,16 @@ def create_app(config_override: dict | None = None) -> Flask:
     if config_override:
         app.config.update(config_override)
 
-    # Initialize extensions
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
-    socketio.init_app(app, cors_allowed_origins="*", async_mode="eventlet")
+    # Initialize extensions with environment-appropriate CORS
+    if settings.is_production:
+        # In production, restrict to configured origins
+        allowed_origins = settings.allowed_origins
+        CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
+        socketio.init_app(app, cors_allowed_origins=allowed_origins, async_mode="eventlet")
+    else:
+        # In development, allow all origins for easier testing
+        CORS(app, resources={r"/api/*": {"origins": "*"}})
+        socketio.init_app(app, cors_allowed_origins="*", async_mode="eventlet")
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
 
@@ -102,13 +109,17 @@ def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(400)
     def handle_bad_request(error):
         """Handle bad request errors."""
+        # Don't expose internal error details in production
+        from insightboost.config.settings import get_settings
+        _settings = get_settings()
+        details = str(error) if not _settings.is_production else {}
         return (
             jsonify(
                 {
                     "error": True,
                     "error_code": "BAD_REQUEST",
                     "message": "Bad request",
-                    "details": str(error),
+                    "details": details,
                 }
             ),
             400,
@@ -117,13 +128,16 @@ def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(404)
     def handle_not_found(error):
         """Handle not found errors."""
+        from insightboost.config.settings import get_settings
+        _settings = get_settings()
+        details = str(error) if not _settings.is_production else {}
         return (
             jsonify(
                 {
                     "error": True,
                     "error_code": "NOT_FOUND",
                     "message": "Resource not found",
-                    "details": str(error),
+                    "details": details,
                 }
             ),
             404,
@@ -227,19 +241,46 @@ def register_socketio_events(sio: SocketIO) -> None:
         session_id = data.get("session_id")
         user_id = data.get("user_id")
 
-        if session_id and user_id:
-            from flask_socketio import emit, join_room
+        if not session_id or not user_id:
+            from flask_socketio import emit
+            emit("error", {"message": "session_id and user_id are required"})
+            return
 
-            join_room(session_id)
-            emit(
-                "session.user_joined",
-                {
-                    "user_id": user_id,
-                    "session_id": session_id,
-                },
-                to=session_id,
-            )
-            logger.info(f"User {user_id} joined session {session_id}")
+        # Import session storage to verify session exists and user can join
+        from insightboost.web.routes.collaboration import _sessions
+        
+        if session_id not in _sessions:
+            from flask_socketio import emit
+            emit("error", {"message": "Session not found"})
+            return
+            
+        session = _sessions[session_id]
+        
+        # Check if session is active
+        if session.get("status") != "active":
+            from flask_socketio import emit
+            emit("error", {"message": "Session is not active"})
+            return
+            
+        # Check participant limit
+        if len(session.get("participants", [])) >= session.get("max_participants", 10):
+            if user_id not in session.get("participants", []):
+                from flask_socketio import emit
+                emit("error", {"message": "Session is full"})
+                return
+
+        from flask_socketio import emit, join_room
+
+        join_room(session_id)
+        emit(
+            "session.user_joined",
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+            },
+            to=session_id,
+        )
+        logger.info(f"User {user_id} joined session {session_id}")
 
     @sio.on("leave_session")
     def handle_leave_session(data: dict):
