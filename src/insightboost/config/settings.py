@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     @field_validator("secret_key")
     @classmethod
-    def validate_secret_key(cls, v: str, info) -> str:
+    def validate_secret_key(cls, v: str) -> str:
         """Validate that secret key is secure in production."""
         insecure_defaults = [
             "dev-only-key-not-for-production",

@@ -248,26 +248,27 @@ def register_socketio_events(sio: SocketIO) -> None:
 
         # Import session storage to verify session exists and user can join
         from insightboost.web.routes.collaboration import _sessions
-        
+
         if session_id not in _sessions:
             from flask_socketio import emit
             emit("error", {"message": "Session not found"})
             return
-            
+
         session = _sessions[session_id]
-        
+
         # Check if session is active
         if session.get("status") != "active":
             from flask_socketio import emit
             emit("error", {"message": "Session is not active"})
             return
-            
-        # Check participant limit
-        if len(session.get("participants", [])) >= session.get("max_participants", 10):
-            if user_id not in session.get("participants", []):
-                from flask_socketio import emit
-                emit("error", {"message": "Session is full"})
-                return
+
+        # Check participant limit - reject if at capacity and user not already in session
+        participants = session.get("participants", [])
+        max_participants = session.get("max_participants", 10)
+        if len(participants) >= max_participants and user_id not in participants:
+            from flask_socketio import emit
+            emit("error", {"message": "Session is full"})
+            return
 
         from flask_socketio import emit, join_room
 
